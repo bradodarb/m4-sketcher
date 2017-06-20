@@ -1,13 +1,14 @@
 import Canvas from './canvas';
 import { Layer, LayerStyle } from '../layers';
-import { DefaultStyles } from '../../config';
+import { DefaultStyles } from '../config';
+import { EndPoint, Segment } from '../geometry/render-models';
 
 import { RenderPipeline, SketchPipeline } from '../render-pipeline';
 
-import { isEndPoint } from '../util/geometryUtils';
+import { isEndPoint } from '../geometry/utils';
 import * as drawUtils from '../util/drawUtils';
 
-export default class Viewport2d {
+export class Viewport2d {
 
   public host: Window;
   public canvas: Canvas;

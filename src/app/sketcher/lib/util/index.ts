@@ -16,13 +16,6 @@ export function askNumber(promptText, initValue, promptCallback, resolver) {
   return null;
 }
 
-export const extend = function (func, parent) {
-  for (var prop in parent.prototype) {
-    if (parent.prototype.hasOwnProperty(prop))
-      func.prototype[prop] = parent.prototype[prop];
-  }
-};
-
 export function fillArray(a, fromIndex, toIndex, val) {
   for (var i = fromIndex; i < toIndex; i++)
     a[i] = val;
@@ -73,8 +66,9 @@ export function defineIterable(obj, name, iteratorFactory) {
 
 export class DoubleKeyMap {
 
+  public map = new Map();
+
   constructor() {
-    this.map = new Map();
   }
 
   get(a, b) {

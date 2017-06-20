@@ -13,7 +13,7 @@ import { Observable } from 'rxjs/Rx';
 
 import { WindowRef } from '../../services/window.service';
 import { Layer, LayerStyle } from '../../lib/layers';
-import DefaultStyles from '../../config/defaultStyles';
+import DefaultStyles from '../../lib/config/defaultStyles';
 
 @Component({
   selector: 'm4-sketcher-view-port',

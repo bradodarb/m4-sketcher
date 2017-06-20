@@ -1,14 +1,14 @@
-import * as utils from '../../utils/utils'
-import * as math from '../../math/math'
-import QR from '../../math/qr'
-import LMOptimizer from '../../math/lm'
+import * as utils from '../../util';
+import * as math from '../../math/math';
+import QR from '../../math/qr';
+import LMOptimizer from '../../math/lm';
 import {
   ConstantWrapper,
   EqualsTo
-} from './constraints'
+} from '../utils';
 import {
   dog_leg
-} from '../../math/optim'
+} from '../../math/optim';
 
 /** @constructor */
 function Param(id, value, readOnly) {
@@ -30,7 +30,7 @@ Param.prototype.get = function () {
   return this.value;
 };
 
-Param.prototype.nop = function () {};
+Param.prototype.nop = function () { };
 
 /** @constructor */
 function System(constraints) {
@@ -300,7 +300,7 @@ var prepare = function (constrs, locked) {
 };
 
 var solve_lm = function (sys, model, jacobian, rough) {
-  var opt = new LMOptimizer(sys.getParams(), math.vec(sys.constraints.length), model, jacobian);
+  var opt = new LMOptimizer(sys.getParams(), math._vec(sys.constraints.length), model, jacobian);
   opt.evalMaximalCount = 100 * sys.params.length;
   var eps = rough ? 0.001 : 0.00000001;
   opt.init0(eps, eps, eps);

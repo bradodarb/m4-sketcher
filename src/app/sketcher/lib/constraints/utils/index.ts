@@ -1,6 +1,6 @@
 import {
   fillArray
-} from '../../utils/utils'
+} from '../../util'
 
 /**
  * This intermediate layer should be eliminated since constraint server isn't used anymore
@@ -659,7 +659,7 @@ function EllipseTangent(params) {
 
     if (perpendicularLength < 0) {
       perpendicularLength *= -1;
-    } else {}
+    } else { }
 
     return (radiusY - perpendicularLength); //*1000;
   };
