@@ -1,5 +1,5 @@
-import LayerStyle from './LayerStyle'
-import DefaultStyles from '../config/defaultStyles'
+import LayerStyle from './layer-style'
+import DefaultStyles from '../../config/defaultStyles'
 
 export default class Layer {
   constructor(name: string, style: LayerStyle) {
@@ -37,4 +37,25 @@ export default class Layer {
       this.objects.push(object);
     }
   }
+
+  public addSegment(x1, y1, x2, y2) {
+    var a = new EndPoint(x1, y1);
+    var b = new EndPoint(x2, y2);
+    var line = new Segment(a, b);
+    this.add(line);
+    return line;
+  }
+
+  public getStyleForObject(obj) {
+    if (obj.style != null) {
+      return obj.style;
+    } else if (obj.role != null) {
+      const style = this.stylesByRoles[obj.role];
+      if (style) {
+        return style;
+      }
+    }
+    return this.style;
+  }
+
 }

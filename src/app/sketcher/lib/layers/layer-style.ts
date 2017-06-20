@@ -1,14 +1,14 @@
 export default class LayerStyle {
 
   public lineWidth: number = 1;
-  public strokeColor: string = '#ffffff';
-  public fillColor: string = '#ffffff';
+  public strokeStyle: string = '#ffffff';
+  public fillStyle: string = '#ffffff';
 
 
   constructor(width: number, stroke: string, fill: string) {
     this.lineWidth = width;
-    this.strokeColor = stroke;
-    this.fillColor = fill;
+    this.strokeStyle = stroke;
+    this.fillStyle = fill;
   }
 
 }

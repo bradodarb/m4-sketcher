@@ -1,4 +1,4 @@
-import LayerStyle from '../models/layerStyle'
+import LayerStyle from '../models/layers/layer-style'
 
 const DefaultStyles = {
   DEFAULT: new LayerStyle(2, '#ffffff', '#000000'),
