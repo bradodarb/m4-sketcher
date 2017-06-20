@@ -1,11 +1,16 @@
 import { SketchObject } from './sketch-shape.render-model';
 import { DrawPoint } from '../util/drawUtils';
 import { Generator } from '../util/id-generator';
-import Vector from '../../math/vector'
+import Vector from '../math/vector'
+import ViewPort2d from '../viewport';
 
-export class EndPoint extends SketchObject {
+export default class EndPoint extends SketchObject {
+
+  public _class = 'TCAD.TWO.EndPoint';
+
   public x: number = 0;
   public y: number = 0;
+  public size: number = 3;
   public parent = null;
 
   private _x: Param = new Param(this, 'x');
@@ -17,52 +22,57 @@ export class EndPoint extends SketchObject {
     this.y = y;
   }
 
-  collectParams(params) {
+  public collectParams(params) {
     params.push(this._x);
     params.push(this._y);
   }
 
-  normalDistance(aim) {
+  public normalDistance(aim) {
     return aim.minus(new Vector(this.x, this.y)).length();
   }
 
-  getReferencePoint() {
+  public getReferencePoint() {
     return this;
   }
 
-  translateImpl(dx, dy) {
+  public translateImpl(dx, dy) {
     this.x += dx;
     this.y += dy;
   }
 
-  drawImpl(ctx, scale) {
-    DrawPoint(ctx, this.x, this.y, 3, scale)
+  public drawSelf(viewer: ViewPort2d) {
+    viewer.context.beginPath();
+    viewer.context.arc(this.x, this.y, this.size / viewer.scale, 0, 2 * Math.PI, false);
+    viewer.context.fill();
   }
 
-  setXY(x, y) {
+  public setXY(x, y) {
     this.x = x;
     this.y = y;
   }
 
-  setFromPoint(p) {
+  public setFromPoint(p) {
     this.setXY(p.x, p.y);
   }
 
-  setFromArray(arr) {
+  public setFromArray(arr) {
     this.setXY(arr[0], arr[1]);
   }
 
-  toVector() {
+  public toVector() {
     return new Vector(this.x, this.y);
   }
 
-  copy() {
+  public copy() {
     return new EndPoint(this.x, this.y);
   }
 }
-EndPoint.prototype._class = 'TCAD.TWO.EndPoint';
 
 export class Param {
+  public id: number = Generator.genID();
+  public obj;
+  public prop;
+
   constructor(obj, prop) {
     this.id = Generator.genID();
     this.obj = obj;

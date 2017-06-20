@@ -1,5 +1,6 @@
-import LayerStyle from './layer-style'
-import DefaultStyles from '../../config/defaultStyles'
+import LayerStyle from './layer-style';
+import DefaultStyles from '../../config/defaultStyles';
+import { Endpoint } from '../render-models';
 
 export default class Layer {
   constructor(name: string, style: LayerStyle) {

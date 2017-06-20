@@ -14,8 +14,6 @@ import { Observable } from 'rxjs/Rx';
 import { WindowRef } from '../../services/window.service';
 import { Layer, LayerStyle } from '../../lib/layers';
 import DefaultStyles from '../../config/defaultStyles';
-import Pipelines from '../../lib/renderPipeline';
-import RenderPipeline from '../../lib/renderPipeline/RenderPipeline';
 
 @Component({
   selector: 'm4-sketcher-view-port',
