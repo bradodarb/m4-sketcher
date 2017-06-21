@@ -1,4 +1,5 @@
-import * as numeric from 'numeric';
+declare var numeric: any;
+
 import { _vec, _matrix } from './math'
 
 //Added strong wolfe condition to numeric's uncmin
@@ -495,6 +496,6 @@ var cg = function (A, x, b, tol, maxIt) {
   return x;
 };
 
-var optim = { DEBUG_HANDLER: function () { } }; //backward compatibility
+var optim = { DEBUG_HANDLER: function (index: any, child: any) { } }; //backward compatibility
 
 export { dog_leg, optim }

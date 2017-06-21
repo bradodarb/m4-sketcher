@@ -1,6 +1,6 @@
 import { SketchObject } from './sketch-shape.render-model';
 import { Param } from '../../parametrics/parameter';
-import { DrawPoint } from '../../util/drawUtils';
+import { DrawPoint } from '../utils';
 import Vector from '../../math/vector'
 import { Viewport2d } from '../../viewport';
 

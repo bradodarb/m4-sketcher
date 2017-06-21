@@ -1,5 +1,5 @@
-import { Generator } from '../../util/id-generator'
-import { Shape } from './shape.render-model'
+import { Generator } from '../../util/id-generator';
+import { Shape } from './shape.render-model';
 import { Viewport2d } from '../../viewport';
 export class SketchObject extends Shape {
 

@@ -1,12 +1,16 @@
+import * as RX from 'rxjs';
 import Canvas from './canvas';
+import Vector from '../math/vector';
 import { Layer, LayerStyle } from '../layers';
 import { DefaultStyles } from '../config';
-import { EndPoint, Segment } from '../geometry/render-models';
+import { EndPoint, ReferencePoint, Segment, Datum, Point } from '../geometry/render-models';
+import { ToolManager, PanTool } from '../tools'
 
 import { RenderPipeline, SketchPipeline } from '../render-pipeline';
 
-import { isEndPoint } from '../geometry/utils';
-import * as drawUtils from '../util/drawUtils';
+import { isEndPoint, DrawPoint } from '../geometry/utils';
+
+import { ParametricManager } from '../parametrics';
 
 export class Viewport2d {
 
@@ -14,9 +18,11 @@ export class Viewport2d {
   public canvas: Canvas;
   public context: CanvasRenderingContext2D;
 
+  public bus = new RX.Subject();
+
+  public parametricManager: ParametricManager;
+
   public fillStyle: string = '#808080';
-
-
 
   public style: any;
   public prevStyle: LayerStyle;
@@ -27,11 +33,12 @@ export class Viewport2d {
   public translate: any = { x: 0.0, y: 0.0 };
   public scale: number = 1.0;
 
-  private activeLayer: Layer;
+  public activeLayer: Layer;
   public layers: Array<Layer> = new Array<Layer>();
   public dimLayer = new Layer("_dim", DefaultStyles.DIM);
   public dimLayers = [this.dimLayer];
 
+  public referencePoint = new ReferencePoint();
   public workSpace: Array<Array<Layer>> = new Array<Array<Layer>>();
   public serviceSpace: Array<Array<Layer>> = new Array<Array<Layer>>();
 
@@ -39,17 +46,40 @@ export class Viewport2d {
   public selected = [];
   public snapped = null;
 
+
+
+  public toolManager: ToolManager;
+
+
+
   constructor(canvas, host) {
     this.canvas = canvas;
+    this.context = this.canvas.getContext("2d");
     this.host = host;
     this.retinaPxielRatio = this.host.devicePixelRatio > 1 ? this.host.devicePixelRatio : 1;
+    this.parametricManager = new ParametricManager(this);
+    this.serviceSpace = this.createServiceLayers();
+
+    this.toolManager = new ToolManager(this, host, null);
+
+
+
+    this.updateCanvasSize();
+    this.refresh();
+  }
+
+  public notify(header, payload) {
+    this.bus.next({
+      header: header,
+      payload: payload
+    });
   }
 
   public roundToPrecision(value) {
     return value.toFixed(this.precision);
   }
 
-  private updateCanvasSize(): void {
+  public updateCanvasSize(): void {
     var canvasWidth = this.canvas.parentNode.offsetWidth;
     var canvasHeight = this.canvas.parentNode.offsetHeight;
 
@@ -68,7 +98,7 @@ export class Viewport2d {
   }
 
 
-  private repaint(): void {
+  public repaint(): void {
 
     this.context.setTransform(1, 0, 0, 1, 0, 0);
 
@@ -134,7 +164,7 @@ export class Viewport2d {
       this.setStyle(style);
     }
     this.prevStyle = style;
-    obj.draw(this.context, this.scale / this.retinaPxielRatio, this);
+    obj.draw(this);
   }
 
 
@@ -202,13 +232,209 @@ export class Viewport2d {
     this.context.fillStyle = style.fillStyle;
   }
 
-  private createServiceLayers = function () {
+  public snap(x, y, excl) {
+    this.cleanSnap();
+    var snapTo = this.search(x, y, 20 / this.scale, true, true, excl);
+    if (snapTo.length > 0) {
+      this.snapped = snapTo[0];
+      this.mark(this.snapped, DefaultStyles.SNAP);
+    }
+    return this.snapped;
+  }
+
+  cleanSnap = function () {
+    if (this.snapped != null) {
+      this.deselect(this.snapped);
+      this.snapped = null;
+    }
+  }
+
+  showBounds = function (x1, y1, x2, y2, offset) {
+    var dx = x2 - x1;
+    var dy = y2 - y1;
+    if (this.canvas.width > this.canvas.height) {
+      this.scale = this.canvas.height / dy;
+    } else {
+      this.scale = this.canvas.width / dx;
+    }
+    this.translate.x = -x1 * this.scale;
+    this.translate.y = -y1 * this.scale;
+  }
+
+  screenToModel2 = function (x, y, out) {
+
+    out.x = x * this.retinaPxielRatio;
+    out.y = this.canvas.height - y * this.retinaPxielRatio;
+
+    out.x -= this.translate.x;
+    out.y -= this.translate.y;
+
+    out.x /= this.scale;
+    out.y /= this.scale;
+  }
+
+  screenToModel = function (e) {
+    return this._screenToModel(e.offsetX, e.offsetY);
+  }
+
+  _screenToModel = function (x, y) {
+    var out = { x: 0, y: 0 };
+    this.screenToModel2(x, y, out);
+    return out;
+  }
+
+  accept = function (visitor) {
+    for (let layer of this.layers) {
+      for (let object of layer.objects) {
+        if (!object.accept(visitor)) {
+          return false;
+        }
+      }
+    }
+  }
+
+  findLayerByName = function (name) {
+    for (var i = 0; i < this.layers.length; i++) {
+      if (this.layers[i].name == name) {
+        return this.layers[i];
+      }
+    }
+    return null;
+  }
+
+  findById = function (id) {
+    var result = null;
+    this.accept(function (o) {
+      if (o.id === id) {
+        result = o;
+        return false;
+      }
+      return true;
+    });
+    return result;
+  }
+
+  select = function (objs, exclusive) {
+    if (exclusive) this.deselectAll();
+    for (var i = 0; i < objs.length; i++) {
+      this.mark(objs[i]);
+    }
+  }
+
+  deselect = function (obj) {
+    for (var i = 0; i < this.selected.length; i++) {
+      if (obj === this.selected[i]) {
+        this.selected.splice(i, 1)[0].marked = null;
+        break;
+      }
+    }
+  }
+  deselectAll = function () {
+    for (var i = 0; i < this.selected.length; i++) {
+      this.selected[i].marked = null;
+    }
+    while (this.selected.length > 0) this.selected.pop();
+  }
+
+
+  pick = function (e) {
+    var m = this.screenToModel(e);
+    return this.search(m.x, m.y, 20 / this.scale, true, false, []);
+  }
+
+  mark = function (obj, style) {
+    if (style === undefined) {
+      style = DefaultStyles.MARK;
+    }
+    obj.marked = style;
+
+    if (this.selected.indexOf(obj) == -1) {
+      this.selected.push(obj);
+    }
+  }
+
+
+
+
+
+
+  getActiveLayer = function () {
+    var layer = this._activeLayer;
+    if (layer == null || layer.readOnly) {
+      layer = null;
+      for (var i = 0; i < this.layers.length; i++) {
+        var l = this.layers[i];
+        if (!l.readOnly) {
+          layer = l;
+          break;
+        }
+      }
+    }
+    if (layer == null) {
+      layer = new Layer("JustALayer", DefaultStyles.DEFAULT);
+      this.layers.push(layer);
+    }
+    return layer;
+  }
+
+  setActiveLayer = function (layer) {
+    if (!layer.readOnly) {
+      this._activeLayer = layer;
+      this.bus.notify("activeLayer");
+    }
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  private createServiceLayers(): Array<Array<Layer>> {
     let layer = new Layer("_service", DefaultStyles.SERVICE);
     //  layer.objects.push(new CrossHair(0, 0, 20));
     layer.objects.push(new Point(0, 0, 2));
     layer.objects.push(this.referencePoint);
-    layer.objects.push(new BasisOrigin(null, this));
-    return [layer];
+    layer.objects.push(new Datum(null, this));
+    return [[layer]];
 
   };
 }

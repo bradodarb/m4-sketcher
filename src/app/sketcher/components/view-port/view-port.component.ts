@@ -12,8 +12,7 @@ import {
 import { Observable } from 'rxjs/Rx';
 
 import { WindowRef } from '../../services/window.service';
-import { Layer, LayerStyle } from '../../lib/layers';
-import DefaultStyles from '../../lib/config/defaultStyles';
+import { Viewport2d } from '../../lib/viewport';
 
 @Component({
   selector: 'm4-sketcher-view-port',
@@ -27,23 +26,22 @@ export class ViewPortComponent implements OnInit {
 
   @ViewChild('canvas') canvasElement: ElementRef;
 
-
+  public viewport: Viewport2d;
 
   constructor(private windowRef: WindowRef) { }
 
   ngOnInit() {
-
+    this.viewport = new Viewport2d(this.canvasElement.nativeElement, this.windowRef.nativeWindow);
   }
 
   ngAfterViewInit() {
-    // this.canvas = this.canvasElement.nativeElement;
-    // this.context = this.canvas.getContext("2d");
 
-    // this.windowRef.resizeStream.debounceTime(1500)
-    //   .subscribe((event) => {
-    //     this.updateCanvasSize();
-    //     this.refresh();
-    //   });
+    const viewport = this.viewport;
+    this.windowRef.resizeStream.debounceTime(1500)
+      .subscribe((event) => {
+        viewport.updateCanvasSize();
+        viewport.refresh();
+      });
   }
 
 

@@ -103,7 +103,7 @@ class Vector {
   }
 
 
-  private _normalize() {
+  public _normalize() {
     var mag = this.length();
     if (mag == 0.0) {
       return this.set(0, 0, 0)

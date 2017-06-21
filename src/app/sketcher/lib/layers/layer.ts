@@ -1,6 +1,6 @@
 import LayerStyle from './layer-style';
-import DefaultStyles from '../../config/defaultStyles';
-import { Endpoint } from '../render-models';
+import DefaultStyles from '../config/defaultStyles';
+import { EndPoint, Segment } from '../geometry/render-models';
 
 export default class Layer {
   constructor(name: string, style: LayerStyle) {
@@ -58,5 +58,4 @@ export default class Layer {
     }
     return this.style;
   }
-
 }

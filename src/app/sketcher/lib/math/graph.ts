@@ -1,4 +1,4 @@
-import { HashTable } from '../utils/hashmap'
+import { HashTable } from '../util/hash-map'
 
 class Graph {
 

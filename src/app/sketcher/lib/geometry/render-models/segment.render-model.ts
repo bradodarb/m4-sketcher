@@ -1,7 +1,9 @@
-import { SketchObject, EndPoint } from './index';
+import { SketchObject } from './sketch-shape.render-model';
+import { EndPoint } from './end-point.render-model';
 import Vector from '../../math/vector';
 import { Constraints } from '../../constraints';
 import * as math from '../../math/math';
+import { Viewport2d } from '../../viewport';
 
 export class Segment extends SketchObject {
 
@@ -64,13 +66,13 @@ export class Segment extends SketchObject {
     this.b.translate(dx, dy);
   }
 
-  drawImpl(ctx, scale) {
-    ctx.beginPath();
-    ctx.moveTo(this.a.x, this.a.y);
-    ctx.lineTo(this.b.x, this.b.y);
+  drawSelf(viewport: Viewport2d) {
+    viewport.context.beginPath();
+    viewport.context.moveTo(this.a.x, this.a.y);
+    viewport.context.lineTo(this.b.x, this.b.y);
     //  ctx.save();
     //  ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.stroke();
+    viewport.context.stroke();
     //  ctx.restore();
   }
 

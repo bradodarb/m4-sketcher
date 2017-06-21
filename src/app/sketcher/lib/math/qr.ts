@@ -1,4 +1,4 @@
-import {fillArray} from '../utils/utils'
+import { fillArray } from '../util'
 import * as math from './math'
 
 /** @constructor */
@@ -9,10 +9,10 @@ function QR(matrix) {
   var nC = nR == 0 ? 0 : this.matrix[0].length;
 
   this.qrRankingThreshold = 1e-30; //??
-  this.solvedCols  = Math.min(nR, nC);
-  this.diagR     = vec(nC);
-  this.norm    = vec(nC);
-  this.beta    = vec(nC);
+  this.solvedCols = Math.min(nR, nC);
+  this.diagR = vec(nC);
+  this.norm = vec(nC);
+  this.beta = vec(nC);
   this.permutation = vec(nC);
   this.rank = null;
 
@@ -21,7 +21,7 @@ function QR(matrix) {
   var akk;
   var j;
   var i;
-  
+
   // initializations
   for (k = 0; k < nC; ++k) {
     this.permutation[k] = k;
@@ -50,25 +50,25 @@ function QR(matrix) {
       }
       if (norm2 > ak2) {
         nextColumn = i;
-        ak2    = norm2;
+        ak2 = norm2;
       }
     }
     if (ak2 <= this.qrRankingThreshold) {
       this.rank = k;
       return;
     }
-    var pk          = this.permutation[nextColumn];
+    var pk = this.permutation[nextColumn];
     this.permutation[nextColumn] = this.permutation[k];
-    this.permutation[k]      = pk;
+    this.permutation[k] = pk;
 
     // choose alpha such that Hk.u = alpha ek
-    akk   = matrix[k][pk];
+    akk = matrix[k][pk];
     var alpha = (akk > 0) ? -Math.sqrt(ak2) : Math.sqrt(ak2);
     var betak = 1.0 / (ak2 - akk * alpha);
-    this.beta[pk]   = betak;
+    this.beta[pk] = betak;
 
     // transform the current column
-    this.diagR[pk]    = alpha;
+    this.diagR[pk] = alpha;
     matrix[k][pk] -= alpha;
 
     // transform the remaining columns
@@ -86,7 +86,7 @@ function QR(matrix) {
   this.rank = this.solvedCols;
 }
 
-QR.prototype.qTy = function(y) {
+QR.prototype.qTy = function (y) {
   var nR = this.matrix.length;
   var nC = this.matrix[0].length;
 
@@ -103,18 +103,18 @@ QR.prototype.qTy = function(y) {
   }
 };
 
-QR.prototype.solve = function(qy) {
+QR.prototype.solve = function (qy) {
 
   var nR = this.matrix.length;
   var nC = this.matrix[0].length;
 
   var vec = math._vec;
-  
+
   var diag = vec(nC);
   var lmDiag = vec(nC);
   var work = vec(nC);
-  var out =  vec(nC);
-  
+  var out = vec(nC);
+
   // copy R and Qty to preserve input and initialize s
   //  in particular, save the diagonal elements of R in lmDir
   for (var j = 0; j < this.solvedCols; ++j) {
@@ -123,7 +123,7 @@ QR.prototype.solve = function(qy) {
       this.matrix[i][pj] = this.matrix[j][this.permutation[i]];
     }
     out[j] = this.diagR[pj];
-    work[j]  = qy[j];
+    work[j] = qy[j];
   }
 
   // eliminate the diagonal matrix d using a Givens rotation
@@ -154,8 +154,8 @@ QR.prototype.solve = function(qy) {
         var rkk = this.matrix[k][pk];
         if (Math.abs(rkk) < Math.abs(lmDiag[k])) {
           var cotan = rkk / lmDiag[k];
-          sin   = 1.0 / Math.sqrt(1.0 + cotan * cotan);
-          cos   = sin * cotan;
+          sin = 1.0 / Math.sqrt(1.0 + cotan * cotan);
+          cos = sin * cotan;
         } else {
           var tan = lmDiag[k] / rkk;
           cos = 1.0 / Math.sqrt(1.0 + tan * tan);

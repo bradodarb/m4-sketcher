@@ -6,7 +6,7 @@ import * as utils from '../util'
 import { Param } from './parameter';
 
 //TODO- REMOVE Viewport from this
-class ParametricManager {
+export class ParametricManager {
 
   public viewer: Viewport2d;
   public subSystems = [];
@@ -493,7 +493,7 @@ class ParametricManager {
     solver.solve(false);
     solver.sync();
   }
-  prepare = function (locked, extraConstraints, disabledObjects) {
+  prepare = function (locked, extraConstraints?, disabledObjects?) {
     return this._prepare(locked, this.subSystems, extraConstraints, disabledObjects);
   }
   _prepare = function (locked, subSystems, extraConstraints, disabledObjects) {
