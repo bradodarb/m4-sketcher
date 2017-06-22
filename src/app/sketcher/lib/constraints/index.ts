@@ -1,5 +1,6 @@
 import * as utils from '../util'
 import { Ref } from './reference'
+import { SketchObject } from '../geometry/render-models';
 import { Param, prepare } from './solver'
 import Vector from '../math/vector'
 import * as math from '../math/math'
@@ -7,12 +8,51 @@ import * as fetch from './fetchers'
 
 var Constraints: any = {};
 
-/** @constructor */
-function SubSystem() {
-  this.alg = 1;
-  this.error = 0;
-  this.reduce = false;
-  this.constraints = [];
+
+class SubSystem {
+  public alg: number = 1;
+  public error: number = 0;
+  public reduce: boolean = false;
+  public constraints: Array<any>;
+}
+
+class Constraint {
+  private _name: string;
+  private _uiName: string;
+  private _reducible: boolean;
+
+  public get NAME(): string {
+    return this._name;
+  }
+  public get UI_NAME(): string {
+    return this._uiName;
+  }
+  public get reducible(): boolean {
+    return this._reducible;
+  }
+
+  constructor(name, uiName, reducible = false) {
+    this._name = name;
+    this._uiName = uiName;
+    this._reducible = reducible;
+  }
+
+  public getSolveData() {
+
+  }
+}
+
+class Coincident extends Constraint {
+  public a: SketchObject;
+  public b: SketchObject;
+
+  constructor(a, b) {
+    super('coi', 'Coincident', true);
+    this.a = a;
+    this.b = b;
+    this.a.linked.push(b);
+    this.b.linked.push(a);
+  }
 }
 
 

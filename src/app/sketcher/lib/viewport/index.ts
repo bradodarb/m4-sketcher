@@ -62,6 +62,9 @@ export class Viewport2d {
 
     this.toolManager = new ToolManager(this, host, null);
 
+    this.activeLayer = new Layer("default", DefaultStyles.DEFAULT);
+    this.layers.push(this.activeLayer);
+    this.workSpace = [this.layers, this.dimLayers];
 
 
     this.updateCanvasSize();
@@ -112,8 +115,8 @@ export class Viewport2d {
 
     this.prevStyle = null;
 
-    this.drawWorkspace(this.workSpace, SketchPipeline);
     this.drawWorkspace(this.serviceSpace, new RenderPipeline());
+    this.drawWorkspace(this.workSpace, SketchPipeline);
   }
 
   public drawWorkspace(workspace: Array<Array<Layer>>, pipeline: RenderPipeline) {
@@ -242,14 +245,14 @@ export class Viewport2d {
     return this.snapped;
   }
 
-  cleanSnap = function () {
+  public cleanSnap = function () {
     if (this.snapped != null) {
       this.deselect(this.snapped);
       this.snapped = null;
     }
   }
 
-  showBounds = function (x1, y1, x2, y2, offset) {
+  public showBounds = function (x1, y1, x2, y2, offset) {
     var dx = x2 - x1;
     var dy = y2 - y1;
     if (this.canvas.width > this.canvas.height) {
@@ -261,7 +264,7 @@ export class Viewport2d {
     this.translate.y = -y1 * this.scale;
   }
 
-  screenToModel2 = function (x, y, out) {
+  public screenToModel2 = function (x, y, out) {
 
     out.x = x * this.retinaPxielRatio;
     out.y = this.canvas.height - y * this.retinaPxielRatio;
@@ -273,17 +276,17 @@ export class Viewport2d {
     out.y /= this.scale;
   }
 
-  screenToModel = function (e) {
+  public screenToModel = function (e) {
     return this._screenToModel(e.offsetX, e.offsetY);
   }
 
-  _screenToModel = function (x, y) {
+  public _screenToModel = function (x, y) {
     var out = { x: 0, y: 0 };
     this.screenToModel2(x, y, out);
     return out;
   }
 
-  accept = function (visitor) {
+  public accept = function (visitor) {
     for (let layer of this.layers) {
       for (let object of layer.objects) {
         if (!object.accept(visitor)) {
@@ -293,7 +296,7 @@ export class Viewport2d {
     }
   }
 
-  findLayerByName = function (name) {
+  public findLayerByName = function (name) {
     for (var i = 0; i < this.layers.length; i++) {
       if (this.layers[i].name == name) {
         return this.layers[i];
@@ -302,7 +305,7 @@ export class Viewport2d {
     return null;
   }
 
-  findById = function (id) {
+  public findById = function (id) {
     var result = null;
     this.accept(function (o) {
       if (o.id === id) {
@@ -314,14 +317,14 @@ export class Viewport2d {
     return result;
   }
 
-  select = function (objs, exclusive) {
+  public select = function (objs, exclusive) {
     if (exclusive) this.deselectAll();
     for (var i = 0; i < objs.length; i++) {
       this.mark(objs[i]);
     }
   }
 
-  deselect = function (obj) {
+  public deselect = function (obj) {
     for (var i = 0; i < this.selected.length; i++) {
       if (obj === this.selected[i]) {
         this.selected.splice(i, 1)[0].marked = null;
@@ -329,7 +332,7 @@ export class Viewport2d {
       }
     }
   }
-  deselectAll = function () {
+  public deselectAll = function () {
     for (var i = 0; i < this.selected.length; i++) {
       this.selected[i].marked = null;
     }
@@ -337,12 +340,12 @@ export class Viewport2d {
   }
 
 
-  pick = function (e) {
+  public pick = function (e) {
     var m = this.screenToModel(e);
     return this.search(m.x, m.y, 20 / this.scale, true, false, []);
   }
 
-  mark = function (obj, style) {
+  public mark = function (obj, style) {
     if (style === undefined) {
       style = DefaultStyles.MARK;
     }
@@ -358,8 +361,8 @@ export class Viewport2d {
 
 
 
-  getActiveLayer = function () {
-    var layer = this._activeLayer;
+  public getActiveLayer = function () {
+    var layer = this.activeLayer;
     if (layer == null || layer.readOnly) {
       layer = null;
       for (var i = 0; i < this.layers.length; i++) {
@@ -371,15 +374,15 @@ export class Viewport2d {
       }
     }
     if (layer == null) {
-      layer = new Layer("JustALayer", DefaultStyles.DEFAULT);
+      layer = new Layer("default", DefaultStyles.DEFAULT);
       this.layers.push(layer);
     }
     return layer;
   }
 
-  setActiveLayer = function (layer) {
+  public setActiveLayer = function (layer) {
     if (!layer.readOnly) {
-      this._activeLayer = layer;
+      this.activeLayer = layer;
       this.bus.notify("activeLayer");
     }
   }
@@ -432,7 +435,7 @@ export class Viewport2d {
     let layer = new Layer("_service", DefaultStyles.SERVICE);
     //  layer.objects.push(new CrossHair(0, 0, 20));
     layer.objects.push(new Point(0, 0, 2));
-    layer.objects.push(this.referencePoint);
+    //layer.objects.push(this.referencePoint);
     layer.objects.push(new Datum(null, this));
     return [[layer]];
 

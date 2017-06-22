@@ -1,9 +1,9 @@
 export function twoPoints(objs) {
   var points = [];
   for (var i = 0; i < objs.length; ++i) {
-    if (objs[i]._class == 'TCAD.TWO.EndPoint') {
+    if (objs[i].className == 'TCAD.TWO.EndPoint') {
       points.push(objs[i]);
-    } else if (objs[i]._class == 'TCAD.TWO.Segment') {
+    } else if (objs[i].className == 'TCAD.TWO.Segment') {
       points.push(objs[i].a);
       points.push(objs[i].b);
     }
@@ -18,7 +18,7 @@ export function points(objs) {
   var points = [];
   for (var i = 0; i < objs.length; ++i) {
     objs[i].accept(function (o) {
-      if (o._class === 'TCAD.TWO.EndPoint') {
+      if (o.className === 'TCAD.TWO.EndPoint') {
         points.push(o);
       }
       return true;
@@ -33,7 +33,7 @@ export function points(objs) {
 export function arkCirc(objs, min) {
   var arcs = [];
   for (var i = 0; i < objs.length; ++i) {
-    if (objs[i]._class === 'TCAD.TWO.Arc' || objs[i]._class === 'TCAD.TWO.Circle') {
+    if (objs[i].className === 'TCAD.TWO.Arc' || objs[i].className === 'TCAD.TWO.Circle') {
       arcs.push(objs[i]);
     }
   }
@@ -46,7 +46,7 @@ export function arkCirc(objs, min) {
 export function generic(objs, types, min) {
   var result = [];
   for (var i = 0; i < objs.length; ++i) {
-    if (types.indexOf(objs[i]._class) > -1) {
+    if (types.indexOf(objs[i].className) > -1) {
       result.push(objs[i]);
     }
   }
@@ -62,9 +62,9 @@ export function pointAndLine(objs) {
   var line = null;
 
   for (var i = 0; i < objs.length; ++i) {
-    if (objs[i]._class == 'TCAD.TWO.EndPoint') {
+    if (objs[i].className == 'TCAD.TWO.EndPoint') {
       point = objs[i];
-    } else if (objs[i]._class == 'TCAD.TWO.Segment') {
+    } else if (objs[i].className == 'TCAD.TWO.Segment') {
       line = objs[i];
     }
   }
@@ -77,7 +77,7 @@ export function pointAndLine(objs) {
 
 export function line(objs) {
   for (var i = 0; i < objs.length; ++i) {
-    if (objs[i]._class == 'TCAD.TWO.Segment') {
+    if (objs[i].className == 'TCAD.TWO.Segment') {
       return objs[i];
     }
   }
@@ -85,7 +85,7 @@ export function line(objs) {
 }
 
 export function lines(objs) {
-  return objs.filter(o => o._class == 'TCAD.TWO.Segment')
+  return objs.filter(o => o.className == 'TCAD.TWO.Segment')
 }
 
 export function arcCircAndLine(objs) {
@@ -94,9 +94,9 @@ export function arcCircAndLine(objs) {
   var line = null;
 
   for (var i = 0; i < objs.length; ++i) {
-    if (objs[i]._class === 'TCAD.TWO.Arc' || objs[i]._class === 'TCAD.TWO.Circle') {
+    if (objs[i].className === 'TCAD.TWO.Arc' || objs[i].className === 'TCAD.TWO.Circle') {
       arc = objs[i];
-    } else if (objs[i]._class == 'TCAD.TWO.Segment') {
+    } else if (objs[i].className == 'TCAD.TWO.Segment') {
       line = objs[i];
     }
   }
@@ -110,7 +110,7 @@ export function arcCircAndLine(objs) {
 export function twoLines(objs) {
   var lines = [];
   for (var i = 0; i < objs.length; ++i) {
-    if (objs[i]._class == 'TCAD.TWO.Segment') {
+    if (objs[i].className == 'TCAD.TWO.Segment') {
       lines.push(objs[i]);
     }
   }
@@ -124,7 +124,7 @@ export function sketchObjects(objs, silent, matching) {
   var fetched = [];
   for (var i = 0; i < objs.length; ++i) {
     for (var j = 0; j < matching.length; j++) {
-      if (objs[i]._class == matching[j]) {
+      if (objs[i].className == matching[j]) {
         fetched[j] = objs[i];
         matching[j] = null;
       }

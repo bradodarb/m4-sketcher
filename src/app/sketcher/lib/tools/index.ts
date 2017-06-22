@@ -1,12 +1,14 @@
 import { Tool } from './tool';
+import { ArcTool } from './arc.tool';
 import { PointTool } from './point.tool';
-import { ToolManager } from './manager';
+import { ToolManager } from './tool-manager';
 import { PanTool } from './pan.tool'
 
 
 export {
-  PointTool,
+  ArcTool,
   PanTool,
+  PointTool,
   Tool,
   ToolManager
 }

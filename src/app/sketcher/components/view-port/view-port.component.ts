@@ -13,6 +13,7 @@ import { Observable } from 'rxjs/Rx';
 
 import { WindowRef } from '../../services/window.service';
 import { Viewport2d } from '../../lib/viewport';
+import { PointTool, ArcTool } from '../../lib/tools';
 
 @Component({
   selector: 'm4-sketcher-view-port',
@@ -44,5 +45,15 @@ export class ViewPortComponent implements OnInit {
       });
   }
 
+  addPoint() {
+    this.viewport.toolManager.takeControl(new PointTool(this.viewport));
+  }
 
+  addArc() {
+    this.viewport.toolManager.takeControl(new ArcTool(this.viewport));
+  }
+
+  reset() {
+    this.viewport.toolManager.takeControl(new PointTool(this.viewport));
+  }
 }

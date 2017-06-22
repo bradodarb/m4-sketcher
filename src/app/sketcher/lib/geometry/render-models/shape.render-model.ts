@@ -12,7 +12,7 @@ export class Shape {
     this.visible = true;
     this.style = null;
     this.role = null;
-    this._className = className;
+    this.setClassName(className);
   }
 
   public accept(visitor) {

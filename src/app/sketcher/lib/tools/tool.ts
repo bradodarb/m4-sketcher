@@ -101,7 +101,7 @@ export class Tool {
 
   static VECTOR_PATTERN = /^(@)?(.+)(,|<)(.+)$/;
 
-  static parseVector = function (referencePoint, command) {
+  static parseVector = function (referencePoint, command): any {
     command = command.replace(/\s+/g, '');
 
     const match = command.match(Tool.VECTOR_PATTERN);
@@ -129,7 +129,7 @@ export class Tool {
   }
 
 
-  static parseNumberSequence = function (command, refs, length) {
+  static parseNumberSequence = function (command, refs, length): any {
     command = command.replace(/\s+/g, '');
     const parts = command.split(',');
     const result = [];

@@ -70,7 +70,7 @@ export class SketchObject extends Shape {
 
   translateImpl(dx, dy) {
     this.accept(function (obj) {
-      if (obj._class === 'TCAD.TWO.EndPoint') {
+      if (obj.className === 'TCAD.TWO.EndPoint') {
         obj.translate(dx, dy);
       }
       return true;

@@ -1,0 +1,141 @@
+import * as utils from '../../util';
+import * as math from '../../math/math';
+import Vector from '../../math/vector'
+import { Ref } from '../../constraints/reference';
+import { Constraints } from '../../constraints'
+import { EndPoint } from './end-point.render-model';
+import { SketchObject } from './sketch-shape.render-model';
+import { Viewport2d } from '../../viewport';
+export class Arc extends SketchObject {
+
+  public a: EndPoint;
+  public b: EndPoint;
+  public c: EndPoint;
+  public radius: Ref;
+
+  constructor(a, b, c) {
+    super('TCAD.TWO.Arc');
+    this.a = a;
+    this.b = b;
+    this.c = c;
+    a.parent = this;
+    b.parent = this;
+    c.parent = this;
+    this.children.push(a, b, c);
+    this.radius = new Ref(0);
+    this.radius.value = this.distanceA();
+    this.radius.obj = this;
+  }
+
+  collectParams(params) {
+    this.a.collectParams(params);
+    this.b.collectParams(params);
+    this.c.collectParams(params);
+    params.push(this.radius);
+  }
+
+  getReferencePoint() {
+    return this.c;
+  }
+
+  translateImpl(dx, dy) {
+    this.a.translate(dx, dy);
+    this.b.translate(dx, dy);
+    this.c.translate(dx, dy);
+  }
+
+
+  radiusForDrawing() {
+    return this.distanceA();
+  }
+
+  distanceA() {
+    return math.distance(this.a.x, this.a.y, this.c.x, this.c.y);
+  }
+
+  distanceB() {
+    return math.distance(this.b.x, this.b.y, this.c.x, this.c.y);
+  }
+
+  getStartAngle() {
+    return Math.atan2(this.a.y - this.c.y, this.a.x - this.c.x);
+  }
+
+  getEndAngle() {
+    return Math.atan2(this.b.y - this.c.y, this.b.x - this.c.x);
+  }
+
+  drawSelf(viewport: Viewport2d) {
+    viewport.context.beginPath();
+    var r = this.radiusForDrawing();
+    var startAngle = this.getStartAngle();
+    var endAngle;
+    if (math.areEqual(this.a.x, this.b.x, math.TOLERANCE) &&
+      math.areEqual(this.a.y, this.b.y, math.TOLERANCE)) {
+      endAngle = startAngle + 2 * Math.PI;
+    } else {
+      endAngle = this.getEndAngle();
+    }
+    viewport.context.arc(this.c.x, this.c.y, r, startAngle, endAngle);
+    var distanceB = this.distanceB();
+    if (Math.abs(r - distanceB) * viewport.scale > 1) {
+      var adj = r / distanceB;
+      viewport.context.save();
+      viewport.context.setLineDash([7 / viewport.scale]);
+      viewport.context.lineTo(this.b.x, this.b.y);
+      viewport.context.moveTo(this.b.x + (this.b.x - this.c.x) / adj, this.b.y + (this.b.y - this.c.y) / adj);
+      viewport.context.stroke();
+      viewport.context.restore();
+    } else {
+      viewport.context.stroke();
+    }
+  }
+
+  isPointInsideSector(x, y) {
+    var ca = new Vector(this.a.x - this.c.x, this.a.y - this.c.y);
+    var cb = new Vector(this.b.x - this.c.x, this.b.y - this.c.y);
+    var ct = new Vector(x - this.c.x, y - this.c.y);
+
+    ca._normalize();
+    cb._normalize();
+    ct._normalize();
+    var cosAB = ca.dot(cb);
+    var cosAT = ca.dot(ct);
+
+    var isInside = cosAT >= cosAB;
+    var abInverse = ca.cross(cb).z < 0;
+    var atInverse = ca.cross(ct).z < 0;
+
+    var result;
+    if (abInverse) {
+      result = !atInverse || !isInside;
+    } else {
+      result = !atInverse && isInside;
+    }
+    return result;
+  }
+
+  normalDistance(aim) {
+
+    var isInsideSector = this.isPointInsideSector(aim.x, aim.y);
+    if (isInsideSector) {
+      return Math.abs(math.distance(aim.x, aim.y, this.c.x, this.c.y) - this.radiusForDrawing());
+    } else {
+      return Math.min(
+        math.distance(aim.x, aim.y, this.a.x, this.a.y),
+        math.distance(aim.x, aim.y, this.b.x, this.b.y)
+      );
+    }
+  }
+
+  stabilize(viewer) {
+    this.radius.set(this.distanceA());
+    viewer.parametricManager._add(new Constraints.P2PDistanceV(this.b, this.c, this.radius));
+    viewer.parametricManager._add(new Constraints.P2PDistanceV(this.a, this.c, this.radius));
+  }
+
+  copy() {
+    return new Arc(this.a.copy(), this.b.copy(), this.c.copy());
+  }
+}
+

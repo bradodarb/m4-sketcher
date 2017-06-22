@@ -1,9 +1,10 @@
 import { Constraints, SubSystem, createByConstraintName } from '../constraints';
 import * as fetch from '../constraints/fetchers';
+import { Param, prepare } from '../constraints/solver';
+import { Param as Parameter } from './parameter';
 import { Viewport2d } from '../viewport';
 import Vector from '../math/vector'
-import * as utils from '../util'
-import { Param } from './parameter';
+import * as utils from '../util';
 
 //TODO- REMOVE Viewport from this
 export class ParametricManager {
@@ -12,6 +13,7 @@ export class ParametricManager {
   public subSystems = [];
   public listeners = [];
   public constantTable = {};
+  public constantResolver: any
 
   constructor(viewer: Viewport2d) {
     this.viewer = viewer;
@@ -19,12 +21,12 @@ export class ParametricManager {
     //TODO- REMOVE Viewport from this
     // this.viewer.params.define('constantDefinition', null);
     // this.viewer.params.subscribe('constantDefinition', 'parametricManager', this.onConstantsExternalChange, this)();
-    // this.constantResolver = this.createConstantResolver();
+    this.constantResolver = this.createConstantResolver();
     //TODO- REMOVE Viewport from this
   }
 
 
-  createConstantResolver = function () {
+  createConstantResolver() {
     var pm = this;
     return function (value) {
       var _value = pm.constantTable[value];
@@ -36,13 +38,15 @@ export class ParametricManager {
       return value;
     }
   }
-  notify = function (event) {
+
+  notify(event) {
     for (var i = 0; i < this.listeners.length; ++i) {
       var l = this.listeners[i];
       l(event);
     }
   }
-  rebuildConstantTable = function (constantDefinition) {
+
+  rebuildConstantTable(constantDefinition) {
     this.constantTable = {};
     if (constantDefinition == null) return;
     var lines = constantDefinition.split('\n');
@@ -62,34 +66,35 @@ export class ParametricManager {
       }
     }
   }
-  onConstantsExternalChange = function (constantDefinition) {
+
+  onConstantsExternalChange(constantDefinition) {
     this.rebuildConstantTable(constantDefinition);
     this.refresh();
   }
-  defineNewConstant = function (name, value) {
-    let constantDefinition = this.viewer.params.constantDefinition;
-    let constantText = name + ' = ' + value;
-    if (constantDefinition) {
-      constantDefinition += '\n' + constantText;
-    } else {
-      constantDefinition = constantText;
-    }
-    this.rebuildConstantTable(constantDefinition);
-    //disabling onConstantsExternalChange since we don't need re-solve
-    this.viewer.params.set('constantDefinition', constantDefinition, 'parametricManager');
+  defineNewConstant(name, value) {
+    // let constantDefinition = this.viewer.params.constantDefinition;
+    // let constantText = name + ' = ' + value;
+    // if (constantDefinition) {
+    //   constantDefinition += '\n' + constantText;
+    // } else {
+    //   constantDefinition = constantText;
+    // }
+    // this.rebuildConstantTable(constantDefinition);
+    // //disabling onConstantsExternalChange since we don't need re-solve
+    // this.viewer.params.set('constantDefinition', constantDefinition, 'parametricManager');
   }
-  findComponents = function (constr) {
+  findComponents(constr) {
     if (this.subSystems.length === 0) {
       this.subSystems.push(new SubSystem());
     }
     return [0];
   }
-  tune = function (subSystem) {
+  tune(subSystem) {
 
   }
 
-  _add = function (constr) {
-    var subSystemIds = this.findComponents(constr);
+  _add(constr: Constraint) {
+    var subSystemIds: any = this.findComponents(constr);
     var subSystem;
     switch (subSystemIds.length) {
       case 0:
@@ -112,27 +117,27 @@ export class ParametricManager {
     subSystem.constraints.push(constr);
     return subSystem;
   }
-  checkRedundancy = function (subSystem, constr) {
+  checkRedundancy(subSystem, constr) {
     var solver = this.prepareForSubSystem([], subSystem.constraints);
     if (solver.diagnose().conflict) {
       alert("Most likely this " + constr.NAME + " constraint is CONFLICTING!")
     }
   }
 
-  refresh = function () {
+  refresh() {
     this.solve();
-    this.notify();
+    //  this.notify();
     this.viewer.refresh();
   }
 
-  add = function (constr) {
-    this.viewer.historyManager.checkpoint();
+  add(constr) {
+    // this.viewer.historyManager.checkpoint();
     var subSystem = this._add(constr);
     this.checkRedundancy(subSystem, constr);
     this.refresh();
   }
 
-  addAll = function (constrs) {
+  addAll(constrs) {
     for (var i = 0; i < constrs.length; i++) {
       var subSystem = this._add(constrs[i]);
       this.checkRedundancy(subSystem, constrs[i]);
@@ -140,8 +145,8 @@ export class ParametricManager {
     this.refresh();
   }
 
-  remove = function (constr) {
-    this.viewer.historyManager.checkpoint();
+  remove(constr) {
+    //  this.viewer.historyManager.checkpoint();
     for (var j = 0; j < this.subSystems.length; j++) {
       var sub = this.subSystems[j];
       for (var i = 0; i < sub.constraints.length; ++i) {
@@ -159,14 +164,14 @@ export class ParametricManager {
   }
 
 
-  removeConstraintsByObj = function (obj) {
+  removeConstraintsByObj(obj) {
     var ownedParams = [];
     obj.collectParams(ownedParams);
     this.removeConstraintsByParams(ownedParams);
   }
 
 
-  removeConstraintsByParams = function (ownedParams) {
+  removeConstraintsByParams(ownedParams) {
     for (var s = 0; s < this.subSystems.length; s++) {
       var toRemove = [];
       var sub = this.subSystems[s];
@@ -194,27 +199,27 @@ export class ParametricManager {
       }
     }
 
-    this.notify();
+    // this.notify();
   }
 
 
-  lock = function (objs) {
+  lock(objs) {
     var p = fetch.points(objs);
     for (var i = 0; i < p.length; ++i) {
       this._add(new Constraints.Lock(p[i], { x: p[i].x, y: p[i].y }));
     }
     this.refresh();
   }
-  vertical = function (objs) {
+  vertical(objs) {
     this.addAll(fetch.lines(objs).map(line => new Constraints.Vertical(line)));
   }
 
 
-  horizontal = function (objs) {
+  horizontal(objs) {
     this.addAll(fetch.lines(objs).map(line => new Constraints.Horizontal(line)));
   }
 
-  parallel = function (objs) {
+  parallel(objs) {
     const lines = fetch.lines(objs);
     const constraints = [];
     for (let i = 1; i < lines.length; i++) {
@@ -223,11 +228,11 @@ export class ParametricManager {
     this.addAll(constraints);
   }
 
-  perpendicular = function (objs) {
+  perpendicular(objs) {
     var lines = fetch.twoLines(objs);
     this.add(new Constraints.Perpendicular(lines[0], lines[1]));
   }
-  lockConvex = function (objs, warnCallback) {
+  lockConvex(objs, warnCallback) {
     var lines = fetch.twoLines(objs);
     var l1 = lines[0];
     var l2 = lines[1];
@@ -277,7 +282,7 @@ export class ParametricManager {
     this.add(new Constraints.LockConvex(c, a, t));
   }
 
-  tangent = function (objs) {
+  tangent(objs) {
     const ellipses = fetch.generic(objs, ['TCAD.TWO.Ellipse', 'TCAD.TWO.EllipticalArc'], 0);
     const lines = fetch.generic(objs, ['TCAD.TWO.Segment'], 1);
     if (ellipses.length > 0) {
@@ -288,7 +293,7 @@ export class ParametricManager {
     }
   }
 
-  rr = function (arcs) {
+  rr(arcs) {
     var prev = arcs[0];
     for (var i = 1; i < arcs.length; ++i) {
       this._add(new Constraints.RR(prev, arcs[i]));
@@ -298,7 +303,7 @@ export class ParametricManager {
   }
 
 
-  ll = function (lines) {
+  ll(lines) {
     var prev = lines[0];
     for (var i = 1; i < lines.length; ++i) {
       this._add(new Constraints.LL(prev, lines[i]));
@@ -308,13 +313,13 @@ export class ParametricManager {
 
   }
 
-  entityEquality = function (objs) {
+  entityEquality(objs) {
     var arcs = fetch.generic(objs, ['TCAD.TWO.Arc', 'TCAD.TWO.Circle'], 0);
     var lines = fetch.generic(objs, ['TCAD.TWO.Segment'], 0);
     if (arcs.length > 0) this.rr(arcs);
     if (lines.length > 0) this.ll(lines);
   }
-  p2lDistance = function (objs, promptCallback) {
+  p2lDistance(objs, promptCallback) {
     var pl = fetch.pointAndLine(objs);
 
     var target = pl[0];
@@ -330,33 +335,33 @@ export class ParametricManager {
     }
   }
 
-  pointInMiddle = function (objs) {
+  pointInMiddle(objs) {
     var pl = fetch.pointAndLine(objs);
     this.add(new Constraints.PointInMiddle(pl[0], pl[1]));
   }
 
-  symmetry = function (objs) {
+  symmetry(objs) {
     var pl = fetch.pointAndLine(objs);
     this.add(new Constraints.Symmetry(pl[0], pl[1]));
   }
-  pointOnArc = function (objs) {
+  pointOnArc(objs) {
     const points = fetch.generic(objs, ['TCAD.TWO.EndPoint'], 1);
     const arcs = fetch.generic(objs, ['TCAD.TWO.Arc', 'TCAD.TWO.Circle', 'TCAD.TWO.Ellipse', 'TCAD.TWO.EllipticalArc'], 1);
     const arc = arcs[0];
-    if (arc._class == 'TCAD.TWO.Ellipse' || arc._class == 'TCAD.TWO.EllipticalArc') {
+    if (arc.className == 'TCAD.TWO.Ellipse' || arc.className == 'TCAD.TWO.EllipticalArc') {
       this.add(new Constraints.PointOnEllipse(points[0], arc));
     } else {
       this.add(new Constraints.PointOnArc(points[0], arc));
     }
   }
 
-  pointOnLine = function (objs) {
+  pointOnLine(objs) {
     var pl = fetch.pointAndLine(objs);
     var target = pl[0];
     var segment = pl[1];
     this.add(new Constraints.PointOnLine(target, segment));
   }
-  llAngle = function (objs, promptCallback) {
+  llAngle(objs, promptCallback) {
     var lines = fetch.generic(objs, 'TCAD.TWO.Segment', 2);
     var l1 = lines[0];
     var l2 = lines[1];
@@ -385,7 +390,7 @@ export class ParametricManager {
     this.add(new Constraints.Angle(points[0], points[1], points[2], points[3], angle));
   }
 
-  p2pDistance = function (objs, promptCallback) {
+  p2pDistance(objs, promptCallback) {
     var p = fetch.twoPoints(objs);
     var distance = new Vector(p[1].x - p[0].x, p[1].y - p[0].y).length();
     var promptDistance = utils.askNumber(Constraints.P2PDistance.prototype.SettableFields.d, distance.toFixed(2), promptCallback, this.constantResolver);
@@ -395,7 +400,7 @@ export class ParametricManager {
     }
   }
 
-  radius = function (objs, promptCallback) {
+  radius(objs, promptCallback) {
     var arcs = fetch.arkCirc(objs, 1);
     var radius = arcs[0].r.get();
     var promptDistance = utils.askNumber(Constraints.Radius.prototype.SettableFields.d, radius.toFixed(2), promptCallback, this.constantResolver);
@@ -407,7 +412,7 @@ export class ParametricManager {
     }
   }
 
-  _linkObjects = function (objs) {
+  _linkObjects(objs) {
     var i;
     var masterIdx = -1;
     for (i = 0; i < objs.length; ++i) {
@@ -430,12 +435,12 @@ export class ParametricManager {
     }
   }
 
-  linkObjects = function (objs) {
+  linkObjects(objs) {
     this._linkObjects(objs);
-    this.notify();
+    // this.notify();
   }
 
-  unlinkObjects = function (a, b) {
+  unlinkObjects(a, b) {
 
     function _unlink(a, b) {
       for (var i = 0; i < a.linked.length; ++i) {
@@ -450,7 +455,7 @@ export class ParametricManager {
     _unlink(b, a);
   }
 
-  findCoincidentConstraint = function (point1, point2) {
+  findCoincidentConstraint(point1, point2) {
     for (let subSys of this.subSystems) {
       for (let c of subSys.constraints) {
         if (c.NAME === 'coi' &&
@@ -462,13 +467,13 @@ export class ParametricManager {
     }
     return null;
   }
-  coincident = function (objs) {
+  coincident(objs) {
     if (objs.length == 0) return;
     this.linkObjects(objs);
     this.solve();
     this.viewer.refresh();
   }
-  getSolveData = function () {
+  getSolveData() {
     var sdata = [];
     for (var i = 0; i < this.subSystems.length; i++) {
       this.__getSolveData(this.subSystems[i].constraints, sdata);
@@ -476,27 +481,30 @@ export class ParametricManager {
     return sdata;
   }
 
-  __getSolveData = function (constraints, out) {
+  __getSolveData(constraints, out) {
     for (var i = 0; i < constraints.length; ++i) {
       var constraint = constraints[i];
-      var data = constraint.getSolveData(this.constantResolver);
-      for (var j = 0; j < data.length; ++j) {
-        data[j].push(constraint.reducible !== undefined);
-        out.push(data[j]);
+      if (constraint.getSolveData) {
+
+        var data = constraint.getSolveData(this.constantResolver);
+        for (var j = 0; j < data.length; ++j) {
+          data[j].push(constraint.reducible !== undefined);
+          out.push(data[j]);
+        }
       }
     }
     return out;
   }
 
-  solve = function (lock, extraConstraints, disabledObjects) {
+  solve(lock = null, extraConstraints = null, disabledObjects = null) {
     const solver = this.prepare(lock, extraConstraints, disabledObjects);
     solver.solve(false);
     solver.sync();
   }
-  prepare = function (locked, extraConstraints?, disabledObjects?) {
+  prepare(locked, extraConstraints = null, disabledObjects = null) {
     return this._prepare(locked, this.subSystems, extraConstraints, disabledObjects);
   }
-  _prepare = function (locked, subSystems, extraConstraints, disabledObjects) {
+  _prepare(locked, subSystems, extraConstraints, disabledObjects) {
     var solvers = [];
     for (var i = 0; i < subSystems.length; i++) {
       solvers.push(this.prepareForSubSystem(locked, subSystems[i].constraints, extraConstraints, disabledObjects));
@@ -540,9 +548,9 @@ export class ParametricManager {
     }
   }
 
-  static isAux = function (obj, disabledObjects = null) {
+  static isAux(obj, disabledObjects = null) {
     while (!!obj) {
-      if (!!obj.aux || (disabledObjects !== undefined && disabledObjects.has(obj))) {
+      if (!!obj.aux || (disabledObjects !== null && disabledObjects !== undefined && disabledObjects.has(obj))) {
         return true;
       }
       obj = obj.parent;
@@ -550,7 +558,7 @@ export class ParametricManager {
     return false;
   }
 
-  static fetchAuxParams = function (system, auxParams, auxDict, disabledObjects) {
+  static fetchAuxParams(system, auxParams, auxDict, disabledObjects) {
     disabledObjects = disabledObjects != undefined ? new Set(disabledObjects) : undefined;
     for (var i = 0; i < system.length; ++i) {
       for (var p = 0; p < system[i][1].length; ++p) {
@@ -566,11 +574,11 @@ export class ParametricManager {
       }
     }
   }
-  __toId = function (v) {
+  __toId(v) {
     return v.id;
   }
 
-  static reduceSystem = function (system, readOnlyParams) {
+  static reduceSystem(system, readOnlyParams) {
 
     var info = {
       idToParam: {},
@@ -580,13 +588,7 @@ export class ParametricManager {
     };
 
     var links = [];
-    function Link(a, b, constr) {
-      this.a = a;
-      this.b = b;
-      this.constr = constr;
-      this.invalid = false;
-      this.processed = false;
-    }
+
 
     var c, pi, paramToConstraints = {};
     for (i = 0; i < system.length; ++i) {
@@ -720,7 +722,7 @@ export class ParametricManager {
     }
     return info;
   }
-  prepareForSubSystem = function (locked, subSystemConstraints, extraConstraints, disabledObjects) {
+  prepareForSubSystem(locked, subSystemConstraints, extraConstraints = null, disabledObjects = null) {
 
     locked = locked || [];
 
@@ -737,7 +739,7 @@ export class ParametricManager {
     var readOnlyParams = auxParams.concat(locked);
     var reduceInfo = ParametricManager.reduceSystem(system, readOnlyParams);
 
-    function getSolverParam(p) {
+    function getSolverParam(p: Parameter) {
       var master = reduceInfo.reducedParams[p.id];
       if (master !== undefined) {
         p = reduceInfo.idToParam[master];
@@ -795,7 +797,7 @@ export class ParametricManager {
       lockedSolverParams[p] = getSolverParam(locked[p]);
     }
 
-    var solver = this.prepare(constrs, lockedSolverParams);
+    const solver: any = this.prepare(constrs, lockedSolverParams);
     function solve(rough, alg) {
       return solver.solveSystem(rough, alg);
     }
@@ -816,7 +818,7 @@ export class ParametricManager {
           slave.set(master.get());
         }
       }
-      viewer.equalizeLinkedEndpoints();
+      //   viewer.equalizeLinkedEndpoints();
     }
 
     function updateParameter(p) {
@@ -827,6 +829,24 @@ export class ParametricManager {
     solver.sync = sync;
     solver.updateParameter = updateParameter;
     return solver;
+  }
+}
+
+
+class Link {
+
+  public a: any;
+  public b: any;
+  public constr: any;
+  public invalid: boolean;
+  public processed: boolean;
+
+  constructor(a, b, constr) {
+    this.a = a;
+    this.b = b;
+    this.constr = constr;
+    this.invalid = false;
+    this.processed = false;
   }
 }
 

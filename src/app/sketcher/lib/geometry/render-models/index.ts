@@ -1,4 +1,5 @@
 
+import { Arc } from './arc.render-model';
 import { Circle } from './circle.render-model';
 import { Datum } from './datum.render-model';
 import { Ellipse } from './ellipse.render-model';
@@ -13,6 +14,7 @@ import { SketchObject } from './sketch-shape.render-model';
 
 
 export {
+  Arc,
   Circle,
   Datum,
   Ellipse,

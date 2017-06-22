@@ -1,5 +1,5 @@
 export function isEndPoint(o) {
-  return o._class === 'TCAD.TWO.EndPoint'
+  return o.className === 'TCAD.TWO.EndPoint'
 }
 
 export function DrawPoint(ctx, x, y, rad, scale) {

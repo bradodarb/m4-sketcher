@@ -10,27 +10,34 @@ import {
   dog_leg
 } from '../../math/optim';
 
-/** @constructor */
-function Param(id, value, readOnly) {
-  this.reset(value);
+
+class Param {
+
+  public j: number;
+  public value: any;
+  public aux: boolean;
+  constructor(id, value, isAux = false) {
+    this.reset(value);
+  }
+
+  public reset(value) {
+    this.set(value);
+    this.j = -1;
+    this.aux = false;
+  };
+
+  public set(value) {
+    if (this.aux) return;
+    this.value = value;
+  };
+
+  public get() {
+    return this.value;
+  };
+
+  public nop() { };
+
 }
-
-Param.prototype.reset = function (value) {
-  this.set(value);
-  this.j = -1;
-  this.aux = false;
-};
-
-Param.prototype.set = function (value) {
-  if (this.aux) return;
-  this.value = value;
-};
-
-Param.prototype.get = function () {
-  return this.value;
-};
-
-Param.prototype.nop = function () { };
 
 /** @constructor */
 function System(constraints) {
