@@ -2,58 +2,22 @@ import * as utils from '../util'
 import { Ref } from './reference'
 import { SketchObject } from '../geometry/render-models';
 import { Param, prepare } from './solver'
+import { Constraint } from './base.constraint';
+import { Coincident } from './coincident.constraint';
+import { RadiusOffset } from './radius-offset.constraint';
+import { Lock } from './lock.constraint';
+import { Parallel } from './parallel.constraint';
+import { Perpendicular } from './perpendicular.constraint';
+import { P2LDistanceSigned } from './distance-PL-signed.constraint';
+import { P2LDistance } from './distance-PL.constraint';
+import { MinLength } from './min-length.constraint';
+import { SubSystem } from './subsystem';
+
 import Vector from '../math/vector'
 import * as math from '../math/math'
 import * as fetch from './fetchers'
 
 var Constraints: any = {};
-
-
-class SubSystem {
-  public alg: number = 1;
-  public error: number = 0;
-  public reduce: boolean = false;
-  public constraints: Array<any>;
-}
-
-class Constraint {
-  private _name: string;
-  private _uiName: string;
-  private _reducible: boolean;
-
-  public get NAME(): string {
-    return this._name;
-  }
-  public get UI_NAME(): string {
-    return this._uiName;
-  }
-  public get reducible(): boolean {
-    return this._reducible;
-  }
-
-  constructor(name, uiName, reducible = false) {
-    this._name = name;
-    this._uiName = uiName;
-    this._reducible = reducible;
-  }
-
-  public getSolveData() {
-
-  }
-}
-
-class Coincident extends Constraint {
-  public a: SketchObject;
-  public b: SketchObject;
-
-  constructor(a, b) {
-    super('coi', 'Coincident', true);
-    this.a = a;
-    this.b = b;
-    this.a.linked.push(b);
-    this.b.linked.push(a);
-  }
-}
 
 
 Constraints.ParentsCollector = function () {
@@ -77,252 +41,61 @@ Constraints.ParentsCollector = function () {
 
 Constraints.Factory = {};
 
+
+
+
+
+
+
+
+
 // ------------------------------------------------------------------------------------------------------------------ //
 
-/** @constructor */
-Constraints.Coincident = function (a, b) {
-  this.a = a;
-  this.b = b;
-  a.linked.push(b);
-  b.linked.push(a);
-};
-
-Constraints.Coincident.prototype.NAME = 'coi';
-Constraints.Coincident.prototype.UI_NAME = 'Coincident';
-Constraints.Coincident.prototype.reducible = true;
-
-Constraints.Coincident.prototype.getSolveData = function () {
-  return [
-    ['equal', [this.a._x, this.b._x], []],
-    ['equal', [this.a._y, this.b._y], []]
-  ];
-};
-
-Constraints.Coincident.prototype.serialize = function () {
-  return [this.NAME, [this.a.id, this.b.id]];
-};
-
-Constraints.Factory[Constraints.Coincident.prototype.NAME] = function (refs, data) {
-  return new Constraints.Coincident(refs(data[0]), refs(data[1]));
-};
-
-Constraints.Coincident.prototype.getObjects = function () {
-  return [this.a, this.b];
+Constraints.Factory['coi'] = function (refs, data) {
+  return new Coincident(refs(data[0]), refs(data[1]));
 };
 
 // ------------------------------------------------------------------------------------------------------------------ //
 
-/** @constructor */
-Constraints.RadiusOffset = function (arc1, arc2, offset) {
-  this.arc1 = arc1;
-  this.arc2 = arc2;
-  this.offset = offset;
-};
-
-Constraints.RadiusOffset.prototype.NAME = 'RadiusOffset';
-Constraints.RadiusOffset.prototype.UI_NAME = 'Radius Offset';
-
-Constraints.RadiusOffset.prototype.getSolveData = function (resolver) {
-  return [
-    ['Diff', [this.arc1.r, this.arc2.r], [resolver(this.offset)]]
-  ];
-};
-
-Constraints.RadiusOffset.prototype.serialize = function () {
-  return [this.NAME, [this.arc1.id, this.arc2.id, this.offset]];
-};
-
-Constraints.Factory[Constraints.RadiusOffset.prototype.NAME] = function (refs, data) {
-  return new Constraints.RadiusOffset(refs(data[0]), refs(data[1]), data[2]);
-};
-
-Constraints.RadiusOffset.prototype.getObjects = function () {
-  return [this.arc1, this.arc2];
-};
-
-Constraints.RadiusOffset.prototype.SettableFields = { 'offset': "Enter the offset" };
-
-// ------------------------------------------------------------------------------------------------------------------ //
-
-/** @constructor */
-Constraints.Lock = function (p, c) {
-  this.p = p;
-  this.c = c;
-};
-
-Constraints.Lock.prototype.NAME = 'lock';
-Constraints.Lock.prototype.UI_NAME = 'Lock';
-
-Constraints.Lock.prototype.getSolveData = function () {
-  return [
-    ['equalsTo', [this.p._x], [this.c.x]],
-    ['equalsTo', [this.p._y], [this.c.y]]
-  ];
-};
-
-Constraints.Lock.prototype.serialize = function () {
-  return [this.NAME, [this.p.id, this.c]];
-};
-
-Constraints.Factory[Constraints.Lock.prototype.NAME] = function (refs, data) {
-  return new Constraints.Lock(refs(data[0]), data[1]);
-};
-
-
-Constraints.Lock.prototype.getObjects = function () {
-  return [this.p];
+Constraints.Factory['RadiusOffset'] = function (refs, data) {
+  return new RadiusOffset(refs(data[0]), refs(data[1]), data[2]);
 };
 
 // ------------------------------------------------------------------------------------------------------------------ //
 
-/** @constructor */
-Constraints.Parallel = function (l1, l2) {
-  this.l1 = l1;
-  this.l2 = l2;
-};
-
-Constraints.Parallel.prototype.NAME = 'parallel';
-Constraints.Parallel.prototype.UI_NAME = 'Parallel';
-
-Constraints.Parallel.prototype.getSolveData = function () {
-  var params = [];
-  this.l1.collectParams(params);
-  this.l2.collectParams(params);
-  return [[this.NAME, params, []]];
-};
-
-Constraints.Parallel.prototype.serialize = function () {
-  return [this.NAME, [this.l1.id, this.l2.id]];
-};
-
-Constraints.Factory[Constraints.Parallel.prototype.NAME] = function (refs, data) {
-  return new Constraints.Parallel(refs(data[0]), refs(data[1]));
-};
-
-Constraints.Parallel.prototype.getObjects = function () {
-  return [this.l1, this.l2];
+Constraints.Factory['lock'] = function (refs, data) {
+  return new Lock(refs(data[0]), data[1]);
 };
 
 // ------------------------------------------------------------------------------------------------------------------ //
 
-/** @constructor */
-Constraints.Perpendicular = function (l1, l2) {
-  this.l1 = l1;
-  this.l2 = l2;
-};
 
-Constraints.Perpendicular.prototype.NAME = 'perpendicular';
-Constraints.Perpendicular.prototype.UI_NAME = 'Perpendicular';
-
-Constraints.Perpendicular.prototype.getSolveData = function () {
-  var params = [];
-  this.l1.collectParams(params);
-  this.l2.collectParams(params);
-  return [[this.NAME, params, []]];
-};
-
-Constraints.Perpendicular.prototype.serialize = function () {
-  return [this.NAME, [this.l1.id, this.l2.id]];
-};
-
-Constraints.Factory[Constraints.Perpendicular.prototype.NAME] = function (refs, data) {
-  return new Constraints.Perpendicular(refs(data[0]), refs(data[1]));
-};
-
-Constraints.Perpendicular.prototype.getObjects = function () {
-  return [this.l1, this.l2];
+Constraints.Factory['parallel'] = function (refs, data) {
+  return new Parallel(refs(data[0]), refs(data[1]));
 };
 
 // ------------------------------------------------------------------------------------------------------------------ //
 
-/** @constructor */
-Constraints.P2LDistanceSigned = function (p, a, b, d) {
-  this.p = p;
-  this.a = a;
-  this.b = b;
-  this.d = d;
+Constraints.Factory['perpendicular'] = function (refs, data) {
+  return new Perpendicular(refs(data[0]), refs(data[1]));
 };
-
-Constraints.P2LDistanceSigned.prototype.NAME = 'P2LDistanceSigned';
-Constraints.P2LDistanceSigned.prototype.UI_NAME = 'Distance P & L';
-
-Constraints.P2LDistanceSigned.prototype.getSolveData = function (resolver) {
-  var params = [];
-  this.p.collectParams(params);
-  this.a.collectParams(params);
-  this.b.collectParams(params);
-  return [[this.NAME, params, [resolver(this.d)]]];
-};
-
-Constraints.P2LDistanceSigned.prototype.serialize = function () {
-  return [this.NAME, [this.p.id, this.a.id, this.b.id, this.d]];
-};
-
-Constraints.Factory[Constraints.P2LDistanceSigned.prototype.NAME] = function (refs, data) {
-  return new Constraints.P2LDistanceSigned(refs(data[0]), refs(data[1]), refs(data[2]), data[3]);
-};
-
-Constraints.P2LDistanceSigned.prototype.getObjects = function () {
-  const collector = new Constraints.ParentsCollector();
-  collector.check(this.a);
-  collector.check(this.b);
-  collector.parents.push(this.p);
-  return collector.parents;
-};
-
-Constraints.P2LDistanceSigned.prototype.SettableFields = { 'd': "Enter the distance" };
 
 // ------------------------------------------------------------------------------------------------------------------ //
 
-/** @constructor */
-Constraints.P2LDistance = function (p, l, d) {
-  this.p = p;
-  this.l = l;
-  this.d = d;
+Constraints.Factory['P2LDistanceSigned'] = function (refs, data) {
+  return new P2LDistanceSigned(refs(data[0]), refs(data[1]), refs(data[2]), data[3]);
 };
-
-Constraints.P2LDistance.prototype.NAME = 'P2LDistance';
-Constraints.P2LDistance.prototype.UI_NAME = 'Distance P & L';
-
-Constraints.P2LDistance.prototype.getSolveData = function (resolver) {
-  var params = [];
-  this.p.collectParams(params);
-  this.l.collectParams(params);
-  return [[this.NAME, params, [resolver(this.d)]]];
-};
-
-Constraints.P2LDistance.prototype.serialize = function () {
-  return [this.NAME, [this.p.id, this.l.id, this.d]];
-};
-
-Constraints.Factory[Constraints.P2LDistance.prototype.NAME] = function (refs, data) {
-  return new Constraints.P2LDistance(refs(data[0]), refs(data[1]), data[2]);
-};
-
-Constraints.P2LDistance.prototype.getObjects = function () {
-  return [this.p, this.l];
-};
-
-Constraints.P2LDistance.prototype.SettableFields = { 'd': "Enter the distance" };
 
 // ------------------------------------------------------------------------------------------------------------------ //
 
-/** @constructor */
-Constraints.MinLength = function (a, b, min) {
-  this.a = a;
-  this.b = b;
-  this.min = min;
+Constraints.Factory['P2LDistance'] = function (refs, data) {
+  return new P2LDistance(refs(data[0]), refs(data[1]), data[2]);
 };
 
-Constraints.MinLength.prototype.aux = true;
-Constraints.MinLength.prototype.NAME = 'MinLength';
-Constraints.MinLength.prototype.UI_NAME = 'MinLength';
+// ------------------------------------------------------------------------------------------------------------------ //
 
-Constraints.MinLength.prototype.getSolveData = function () {
-  var params = [];
-  this.a.collectParams(params);
-  this.b.collectParams(params);
-  return [[this.NAME, params, [this.min]]];
+Constraints.Factory['MinLength'] = function (refs, data) {
+  return new MinLength(refs(data[0]), refs(data[1]), data[2]);
 };
 
 // ------------------------------------------------------------------------------------------------------------------ //

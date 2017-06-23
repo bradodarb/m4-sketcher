@@ -10,8 +10,8 @@ export class EndPoint extends SketchObject {
   public size: number = 3;
   public parent = null;
 
-  private _x: Param = new Param(this, 'x');
-  private _y: Param = new Param(this, 'y');
+  public _x: Param = new Param(this, 'x');
+  public _y: Param = new Param(this, 'y');
 
   constructor(x, y) {
     super('TCAD.TWO.EndPoint');

@@ -2,6 +2,24 @@ import {
   fillArray
 } from '../../util'
 
+export function ParentsCollector() {
+  this.parents = [];
+  var parents = this.parents;
+  var index = {};
+  function add(obj) {
+    if (index[obj.id] === undefined) {
+      index[obj.id] = obj;
+      parents.push(obj);
+    }
+  }
+  this.check = function (obj) {
+    if (obj.parent !== null) {
+      add(obj.parent);
+    } else {
+      add(obj);
+    }
+  };
+}
 /**
  * This intermediate layer should be eliminated since constraint server isn't used anymore
  */
