@@ -392,14 +392,27 @@ export class Viewport2d {
 
 
 
-
-
-
-
-
-
-
-
+  equalizeLinkedEndpoints = function () {
+    const visited = new Set();
+    console.log('Viewport.equalizeLinkedEndpoints called')
+    function equalize(obj, link?) {
+      if (visited.has(obj.id)) return;
+      visited.add(obj.id);
+      for (let link of obj.linked) {
+        if (isEndPoint(link)) {
+          equalize(obj, link);
+          link.setFromPoint(obj);
+          equalize(link);
+        }
+      }
+    }
+    this.accept((obj) => {
+      if (isEndPoint(obj)) {
+        equalize(obj);
+      }
+      return true;
+    });
+  }
 
 
 

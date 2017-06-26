@@ -1,4 +1,35 @@
-import { Constraints, SubSystem, createByConstraintName } from '../constraints';
+import {
+  Constraint,
+  Coincident,
+  RadiusOffset,
+  Lock,
+  Parallel,
+  Perpendicular,
+  P2LDistanceSigned,
+  P2LDistance,
+  MinLength,
+  P2LDistanceV,
+  P2PDistance,
+  P2PDistanceV,
+  GreaterThan,
+  Radius,
+  RadiusEquality,
+  LineEquality,
+  Vertical,
+  Horizontal,
+  Tangent,
+  PointOnLine,
+  PointOnArc,
+  PointOnEllipseInternal,
+  PointOnEllipse,
+  EllipseTangent,
+  PointInMiddle,
+  Symmetry,
+  Angle,
+  LockConvex, SubSystem,
+} from '../constraints';
+import { createByConstraintName } from '../constraints/utils';
+
 import * as fetch from '../constraints/fetchers';
 import { Param, prepare } from '../constraints/solver';
 import { Param as Parameter } from './parameter';
@@ -10,7 +41,7 @@ import * as utils from '../util';
 export class ParametricManager {
 
   public viewer: Viewport2d;
-  public subSystems = [];
+  public subSystems: Array<SubSystem> = new Array<SubSystem>();
   public listeners = [];
   public constantTable = {};
   public constantResolver: any
@@ -83,7 +114,7 @@ export class ParametricManager {
     // //disabling onConstantsExternalChange since we don't need re-solve
     // this.viewer.params.set('constantDefinition', constantDefinition, 'parametricManager');
   }
-  findComponents(constr) {
+  findComponents(constr: Constraint) {
     if (this.subSystems.length === 0) {
       this.subSystems.push(new SubSystem());
     }
@@ -117,7 +148,7 @@ export class ParametricManager {
     subSystem.constraints.push(constr);
     return subSystem;
   }
-  checkRedundancy(subSystem, constr) {
+  checkRedundancy(subSystem, constr: Constraint) {
     var solver = this.prepareForSubSystem([], subSystem.constraints);
     if (solver.diagnose().conflict) {
       alert("Most likely this " + constr.NAME + " constraint is CONFLICTING!")
@@ -130,14 +161,14 @@ export class ParametricManager {
     this.viewer.refresh();
   }
 
-  add(constr) {
+  add(constr: Constraint) {
     // this.viewer.historyManager.checkpoint();
     var subSystem = this._add(constr);
     this.checkRedundancy(subSystem, constr);
     this.refresh();
   }
 
-  addAll(constrs) {
+  addAll(constrs: Array<Constraint>) {
     for (var i = 0; i < constrs.length; i++) {
       var subSystem = this._add(constrs[i]);
       this.checkRedundancy(subSystem, constrs[i]);
@@ -145,7 +176,7 @@ export class ParametricManager {
     this.refresh();
   }
 
-  remove(constr) {
+  remove(constr: Constraint) {
     //  this.viewer.historyManager.checkpoint();
     for (var j = 0; j < this.subSystems.length; j++) {
       var sub = this.subSystems[j];
@@ -154,7 +185,9 @@ export class ParametricManager {
         if (p === constr) {
           sub.constraints.splice(i, 1);
           if (p.NAME === 'coi') {
-            this.unlinkObjects(p.a, p.b);
+
+            const coincident = p as Coincident;
+            this.unlinkObjects(coincident.a, coincident.b);
           }
           break;
         }
@@ -206,31 +239,31 @@ export class ParametricManager {
   lock(objs) {
     var p = fetch.points(objs);
     for (var i = 0; i < p.length; ++i) {
-      this._add(new Constraints.Lock(p[i], { x: p[i].x, y: p[i].y }));
+      this._add(new Lock(p[i], { x: p[i].x, y: p[i].y }));
     }
     this.refresh();
   }
   vertical(objs) {
-    this.addAll(fetch.lines(objs).map(line => new Constraints.Vertical(line)));
+    this.addAll(fetch.lines(objs).map(line => new Vertical(line)));
   }
 
 
   horizontal(objs) {
-    this.addAll(fetch.lines(objs).map(line => new Constraints.Horizontal(line)));
+    this.addAll(fetch.lines(objs).map(line => new Horizontal(line)));
   }
 
   parallel(objs) {
     const lines = fetch.lines(objs);
     const constraints = [];
     for (let i = 1; i < lines.length; i++) {
-      constraints.push(new Constraints.Parallel(lines[i - 1], lines[i]));
+      constraints.push(new Parallel(lines[i - 1], lines[i]));
     }
     this.addAll(constraints);
   }
 
   perpendicular(objs) {
     var lines = fetch.twoLines(objs);
-    this.add(new Constraints.Perpendicular(lines[0], lines[1]));
+    this.add(new Perpendicular(lines[0], lines[1]));
   }
   lockConvex(objs, warnCallback) {
     var lines = fetch.twoLines(objs);
@@ -279,24 +312,24 @@ export class ParametricManager {
       t = _;
     }
 
-    this.add(new Constraints.LockConvex(c, a, t));
+    this.add(new LockConvex(c, a, t));
   }
 
   tangent(objs) {
     const ellipses = fetch.generic(objs, ['TCAD.TWO.Ellipse', 'TCAD.TWO.EllipticalArc'], 0);
     const lines = fetch.generic(objs, ['TCAD.TWO.Segment'], 1);
     if (ellipses.length > 0) {
-      this.add(new Constraints.EllipseTangent(lines[0], ellipses[0]));
+      this.add(new EllipseTangent(lines[0], ellipses[0]));
     } else {
       const arcs = fetch.generic(objs, ['TCAD.TWO.Arc', 'TCAD.TWO.Circle'], 1);
-      this.add(new Constraints.Tangent(arcs[0], lines[0]));
+      this.add(new Tangent(arcs[0], lines[0]));
     }
   }
 
   rr(arcs) {
     var prev = arcs[0];
     for (var i = 1; i < arcs.length; ++i) {
-      this._add(new Constraints.RR(prev, arcs[i]));
+      this._add(new RadiusEquality(prev, arcs[i]));
       prev = arcs[i];
     }
     this.refresh();
@@ -306,7 +339,7 @@ export class ParametricManager {
   ll(lines) {
     var prev = lines[0];
     for (var i = 1; i < lines.length; ++i) {
-      this._add(new Constraints.LL(prev, lines[i]));
+      this._add(new LineEquality(prev, lines[i]));
       prev = lines[i];
     }
     this.refresh();
@@ -328,30 +361,30 @@ export class ParametricManager {
     var ex = new Vector(-(segment.b.y - segment.a.y), segment.b.x - segment.a.x).normalize();
     var distance = Math.abs(ex.dot(new Vector(segment.a.x - target.x, segment.a.y - target.y)));
 
-    var promptDistance = utils.askNumber(Constraints.P2LDistance.prototype.SettableFields.d, distance.toFixed(2), promptCallback, this.constantResolver);
+    var promptDistance = utils.askNumber(P2LDistance.SettableFields.d, distance.toFixed(2), promptCallback, this.constantResolver);
 
     if (promptDistance != null) {
-      this.add(new Constraints.P2LDistance(target, segment, promptDistance));
+      this.add(new P2LDistance(target, segment, promptDistance));
     }
   }
 
   pointInMiddle(objs) {
     var pl = fetch.pointAndLine(objs);
-    this.add(new Constraints.PointInMiddle(pl[0], pl[1]));
+    this.add(new PointInMiddle(pl[0], pl[1]));
   }
 
   symmetry(objs) {
     var pl = fetch.pointAndLine(objs);
-    this.add(new Constraints.Symmetry(pl[0], pl[1]));
+    this.add(new Symmetry(pl[0], pl[1]));
   }
   pointOnArc(objs) {
     const points = fetch.generic(objs, ['TCAD.TWO.EndPoint'], 1);
     const arcs = fetch.generic(objs, ['TCAD.TWO.Arc', 'TCAD.TWO.Circle', 'TCAD.TWO.Ellipse', 'TCAD.TWO.EllipticalArc'], 1);
     const arc = arcs[0];
     if (arc.className == 'TCAD.TWO.Ellipse' || arc.className == 'TCAD.TWO.EllipticalArc') {
-      this.add(new Constraints.PointOnEllipse(points[0], arc));
+      this.add(new PointOnEllipse(points[0], arc));
     } else {
-      this.add(new Constraints.PointOnArc(points[0], arc));
+      this.add(new PointOnArc(points[0], arc));
     }
   }
 
@@ -359,7 +392,7 @@ export class ParametricManager {
     var pl = fetch.pointAndLine(objs);
     var target = pl[0];
     var segment = pl[1];
-    this.add(new Constraints.PointOnLine(target, segment));
+    this.add(new PointOnLine(target, segment));
   }
   llAngle(objs, promptCallback) {
     var lines = fetch.generic(objs, 'TCAD.TWO.Segment', 2);
@@ -385,28 +418,28 @@ export class ParametricManager {
 
     var angle = Math.atan2(dy2, dx2) - Math.atan2(dy1, dx1);
     angle *= 1 / Math.PI * 180;
-    angle = utils.askNumber(Constraints.Angle.prototype.SettableFields.angle, angle.toFixed(2), promptCallback, this.constantResolver);
+    angle = utils.askNumber(Angle.SettableFields.angle, angle.toFixed(2), promptCallback, this.constantResolver);
     if (angle === null) return;
-    this.add(new Constraints.Angle(points[0], points[1], points[2], points[3], angle));
+    this.add(new Angle(points[0], points[1], points[2], points[3], angle));
   }
 
   p2pDistance(objs, promptCallback) {
     var p = fetch.twoPoints(objs);
     var distance = new Vector(p[1].x - p[0].x, p[1].y - p[0].y).length();
-    var promptDistance = utils.askNumber(Constraints.P2PDistance.prototype.SettableFields.d, distance.toFixed(2), promptCallback, this.constantResolver);
+    var promptDistance = utils.askNumber(P2PDistance.SettableFields.d, distance.toFixed(2), promptCallback, this.constantResolver);
 
     if (promptDistance != null) {
-      this.add(new Constraints.P2PDistance(p[0], p[1], promptDistance));
+      this.add(new P2PDistance(p[0], p[1], promptDistance));
     }
   }
 
   radius(objs, promptCallback) {
     var arcs = fetch.arkCirc(objs, 1);
     var radius = arcs[0].r.get();
-    var promptDistance = utils.askNumber(Constraints.Radius.prototype.SettableFields.d, radius.toFixed(2), promptCallback, this.constantResolver);
+    var promptDistance = utils.askNumber(Radius.SettableFields.d, radius.toFixed(2), promptCallback, this.constantResolver);
     if (promptDistance != null) {
       for (var i = 0; i < arcs.length; ++i) {
-        this._add(new Constraints.Radius(arcs[i], promptDistance));
+        this._add(new Radius(arcs[i], promptDistance));
       }
       this.refresh();
     }
@@ -430,7 +463,7 @@ export class ParametricManager {
       if (i === masterIdx) continue;
       objs[i].x = objs[masterIdx].x;
       objs[i].y = objs[masterIdx].y;
-      var c = new Constraints.Coincident(objs[i], objs[masterIdx]);
+      var c = new Coincident(objs[i], objs[masterIdx]);
       this._add(c);
     }
   }
@@ -455,14 +488,18 @@ export class ParametricManager {
     _unlink(b, a);
   }
 
-  findCoincidentConstraint(point1, point2) {
+  findCoincidentConstraint(point1, point2): Coincident {
     for (let subSys of this.subSystems) {
       for (let c of subSys.constraints) {
-        if (c.NAME === 'coi' &&
-          ((c.a.id === point1.id && c.b.id === point2.id) ||
-            (c.b.id === point1.id && c.a.id === point2.id))) {
-          return c;
+        if (c.NAME === 'coi') {
+          const coincident = c as Coincident;
+          if (
+            ((coincident.a.id === point1.id && coincident.b.id === point2.id) ||
+              (coincident.b.id === point1.id && coincident.a.id === point2.id))) {
+            return coincident;
+          }
         }
+
       }
     }
     return null;
@@ -474,14 +511,14 @@ export class ParametricManager {
     this.viewer.refresh();
   }
   getSolveData() {
-    var sdata = [];
+    var sdata: Array<Constraint> = new Array<Constraint>();
     for (var i = 0; i < this.subSystems.length; i++) {
       this.__getSolveData(this.subSystems[i].constraints, sdata);
     }
     return sdata;
   }
 
-  __getSolveData(constraints, out) {
+  __getSolveData(constraints: Array<Constraint>, out: Array<any>) {
     for (var i = 0; i < constraints.length; ++i) {
       var constraint = constraints[i];
       if (constraint.getSolveData) {
@@ -505,6 +542,7 @@ export class ParametricManager {
     return this._prepare(locked, this.subSystems, extraConstraints, disabledObjects);
   }
   _prepare(locked, subSystems, extraConstraints, disabledObjects) {
+    console.log('Locked @ _prepare', locked)
     var solvers = [];
     for (var i = 0; i < subSystems.length; i++) {
       solvers.push(this.prepareForSubSystem(locked, subSystems[i].constraints, extraConstraints, disabledObjects));
@@ -722,14 +760,14 @@ export class ParametricManager {
     }
     return info;
   }
-  prepareForSubSystem(locked, subSystemConstraints, extraConstraints = null, disabledObjects = null) {
-
-    locked = locked || [];
+  prepareForSubSystem(locked: Array<Parameter> = new Array<Parameter>(), subSystemConstraints: Array<Constraint>,
+    extraConstraints = null, disabledObjects = null) {
+    console.log('Locked @ prepareForSubSystem:  ', (locked));
 
     var constrs = [];
     var solverParamsDict = {};
     var system = [];
-    var auxParams = [];
+    var auxParams: Array<Parameter> = new Array<Parameter>();
     var auxDict = {};
 
     this.__getSolveData(subSystemConstraints, system);
@@ -739,11 +777,14 @@ export class ParametricManager {
     var readOnlyParams = auxParams.concat(locked);
     var reduceInfo = ParametricManager.reduceSystem(system, readOnlyParams);
 
+    console.log('Locked+Aux Params @ prepareForSubSystem:  ', (locked));
     function getSolverParam(p: Parameter) {
+      console.log('@getSolverParam', p)
       var master = reduceInfo.reducedParams[p.id];
       if (master !== undefined) {
         p = reduceInfo.idToParam[master];
       }
+
       var _p = solverParamsDict[p.id];
       if (_p === undefined) {
         if (p.__cachedParam__ === undefined) {
@@ -782,6 +823,7 @@ export class ParametricManager {
 
       for (let p = 0; p < sdata[1].length; ++p) {
         const param = sdata[1][p];
+        console.log('@prepareforsubsystem for->sdata', locked[p])
         const solverParam = getSolverParam(param);
         solverParam.aux = auxDict[param.id] !== undefined;
         params.push(solverParam);
@@ -794,10 +836,11 @@ export class ParametricManager {
 
     var lockedSolverParams = [];
     for (let p = 0; p < locked.length; ++p) {
+      console.log('@prepareforsubsystem for->locked', locked[p])
       lockedSolverParams[p] = getSolverParam(locked[p]);
     }
-
-    const solver: any = this.prepare(constrs, lockedSolverParams);
+    console.log('@prepareforsubsystem.buildSolver', constrs, lockedSolverParams)
+    const solver: any = prepare(constrs, lockedSolverParams);
     function solve(rough, alg) {
       return solver.solveSystem(rough, alg);
     }
@@ -818,10 +861,11 @@ export class ParametricManager {
           slave.set(master.get());
         }
       }
-      //   viewer.equalizeLinkedEndpoints();
+      viewer.equalizeLinkedEndpoints();
     }
 
     function updateParameter(p) {
+      console.log('@updateParameter', p)
       getSolverParam(p).set(p.get());
     }
 
@@ -837,7 +881,7 @@ class Link {
 
   public a: any;
   public b: any;
-  public constr: any;
+  public constr: Constraint;
   public invalid: boolean;
   public processed: boolean;
 

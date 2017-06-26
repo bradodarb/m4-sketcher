@@ -1,8 +1,9 @@
 import {
   fillArray
 } from '../../util'
+import { Param } from '../solver';
 
-export function ParentsCollector() {
+function ParentsCollector() {
   this.parents = [];
   var parents = this.parents;
   var index = {};
@@ -23,7 +24,7 @@ export function ParentsCollector() {
 /**
  * This intermediate layer should be eliminated since constraint server isn't used anymore
  */
-function createByConstraintName(name, params, values) {
+function createByConstraintName(name: string, params: Array<Param>, values: Array<number>) {
   switch (name) {
     case "equal":
       return new Equal(params);
@@ -414,7 +415,6 @@ function P2PDistance(params, distance) {
 }
 
 function P2PDistanceV(params) {
-
   this.params = params;
 
   var p1x = 0;
@@ -736,5 +736,6 @@ const sq = x => x * x;
 export {
   createByConstraintName,
   EqualsTo,
-  ConstantWrapper
+  ConstantWrapper,
+  ParentsCollector
 }

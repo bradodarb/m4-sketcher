@@ -1,6 +1,7 @@
-declare var numeric: any;
-
+//declare const numeric: any;
+import * as numeric from 'numeric'
 import { _vec, _matrix } from './math'
+
 
 //Added strong wolfe condition to numeric's uncmin
 var bfgs_ = function (f, x0, tol = 1e-8, gradient, maxit = 1000, callback, options: any = {}) {

@@ -2,7 +2,7 @@ import * as utils from '../../util';
 import * as math from '../../math/math';
 import Vector from '../../math/vector'
 import { Ref } from '../../constraints/reference';
-import { Constraints } from '../../constraints'
+import { P2PDistanceV } from '../../constraints'
 import { EndPoint } from './end-point.render-model';
 import { SketchObject } from './sketch-shape.render-model';
 import { Viewport2d } from '../../viewport';
@@ -22,8 +22,7 @@ export class Arc extends SketchObject {
     b.parent = this;
     c.parent = this;
     this.children.push(a, b, c);
-    this.radius = new Ref(0);
-    this.radius.value = this.distanceA();
+    this.radius = new Ref(this.distanceA());
     this.radius.obj = this;
   }
 
@@ -130,8 +129,8 @@ export class Arc extends SketchObject {
 
   stabilize(viewer) {
     this.radius.set(this.distanceA());
-    viewer.parametricManager._add(new Constraints.P2PDistanceV(this.b, this.c, this.radius));
-    viewer.parametricManager._add(new Constraints.P2PDistanceV(this.a, this.c, this.radius));
+    viewer.parametricManager._add(new P2PDistanceV(this.b, this.c, this.radius));
+    viewer.parametricManager._add(new P2PDistanceV(this.a, this.c, this.radius));
   }
 
   copy() {

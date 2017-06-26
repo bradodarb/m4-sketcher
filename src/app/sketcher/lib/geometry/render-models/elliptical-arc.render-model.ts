@@ -5,7 +5,7 @@ import { Ellipse } from './ellipse.render-model';
 import { Ref } from '../../constraints/reference';
 import { Viewport2d } from '../../viewport';
 
-import { Constraints } from '../../constraints'
+import { PointOnEllipseInternal } from '../../constraints'
 
 import * as math from '../../math/math';
 import { swap } from '../../util'
@@ -28,8 +28,8 @@ export class EllipticalArc extends Ellipse {
   }
 
   stabilize(viewer) {
-    viewer.parametricManager._add(new Constraints.PointOnEllipseInternal(this.b, this));
-    viewer.parametricManager._add(new Constraints.PointOnEllipseInternal(this.a, this));
+    viewer.parametricManager._add(new PointOnEllipseInternal(this.b, this));
+    viewer.parametricManager._add(new PointOnEllipseInternal(this.a, this));
   }
 
   drawImpl(ctx, scale) {

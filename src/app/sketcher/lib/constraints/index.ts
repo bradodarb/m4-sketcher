@@ -2,729 +2,233 @@ import * as utils from '../util'
 import { Ref } from './reference'
 import { SketchObject } from '../geometry/render-models';
 import { Param, prepare } from './solver'
-import { Constraint } from './base.constraint';
-import { Coincident } from './coincident.constraint';
-import { RadiusOffset } from './radius-offset.constraint';
-import { Lock } from './lock.constraint';
-import { Parallel } from './parallel.constraint';
-import { Perpendicular } from './perpendicular.constraint';
-import { P2LDistanceSigned } from './distance-PL-signed.constraint';
-import { P2LDistance } from './distance-PL.constraint';
-import { MinLength } from './min-length.constraint';
+import { Constraint } from './object-models/base.constraint-model';
+import { Coincident } from './object-models/coincident.constraint-model';
+import { RadiusOffset } from './object-models/radius-offset.constraint-model';
+import { Lock } from './object-models/lock.constraint-model';
+import { Parallel } from './object-models/parallel.constraint-model';
+import { Perpendicular } from './object-models/perpendicular.constraint-model';
+import { P2LDistanceSigned } from './object-models/distance-PL-signed.constraint-model';
+import { P2LDistance } from './object-models/distance-PL.constraint-model';
+import { MinLength } from './object-models/min-length.constraint-model';
+import { P2LDistanceV } from './object-models/distance-PLV.constraint-model';
+import { P2PDistance } from './object-models/distance-PP.constraint-model';
+import { P2PDistanceV } from './object-models/distance-PPV.constraint-model';
+import { GreaterThan } from './object-models/greater-than.constraint-model';
+import { Radius } from './object-models/radius.constraint-model';
+import { RadiusEquality } from './object-models/radius-equality.constraint-model';
+import { LineEquality } from './object-models/line-equality.constraint-model';
+import { Vertical } from './object-models/vertical.constraint-model';
+import { Horizontal } from './object-models/horizontal.constraint-model';
+import { Tangent } from './object-models/tangent.constraint-model';
+import { PointOnLine } from './object-models/point-on-line.constraint-model';
+import { PointOnArc } from './object-models/point-on-arc.constraint-model';
+import { PointOnEllipseInternal } from './object-models/point-on-ellipse-internal.constraint-model';
+import { PointOnEllipse } from './object-models/point-on-ellipse.constraint-model';
+import { EllipseTangent } from './object-models/tangent-ellipse.constraint-model';
+import { PointInMiddle } from './object-models/mid-point.constraint-model';
+import { Symmetry } from './object-models/symetrical.constraint-model';
+import { Angle } from './object-models/angle.constraint-model';
+import { LockConvex } from './object-models/lock-convexity.constraint-model';
+
 import { SubSystem } from './subsystem';
 
-import Vector from '../math/vector'
-import * as math from '../math/math'
-import * as fetch from './fetchers'
 
-var Constraints: any = {};
-
-
-Constraints.ParentsCollector = function () {
-  this.parents = [];
-  var parents = this.parents;
-  var index = {};
-  function add(obj) {
-    if (index[obj.id] === undefined) {
-      index[obj.id] = obj;
-      parents.push(obj);
-    }
-  }
-  this.check = function (obj) {
-    if (obj.parent !== null) {
-      add(obj.parent);
-    } else {
-      add(obj);
-    }
-  };
-};
-
-Constraints.Factory = {};
-
-
-
-
-
-
-
-
+const Factory = {};
 
 // ------------------------------------------------------------------------------------------------------------------ //
 
-Constraints.Factory['coi'] = function (refs, data) {
+Factory['coi'] = function (refs, data) {
   return new Coincident(refs(data[0]), refs(data[1]));
 };
 
 // ------------------------------------------------------------------------------------------------------------------ //
 
-Constraints.Factory['RadiusOffset'] = function (refs, data) {
+Factory['RadiusOffset'] = function (refs, data) {
   return new RadiusOffset(refs(data[0]), refs(data[1]), data[2]);
 };
 
 // ------------------------------------------------------------------------------------------------------------------ //
 
-Constraints.Factory['lock'] = function (refs, data) {
+Factory['lock'] = function (refs, data) {
   return new Lock(refs(data[0]), data[1]);
 };
 
 // ------------------------------------------------------------------------------------------------------------------ //
 
-
-Constraints.Factory['parallel'] = function (refs, data) {
+Factory['parallel'] = function (refs, data) {
   return new Parallel(refs(data[0]), refs(data[1]));
 };
 
 // ------------------------------------------------------------------------------------------------------------------ //
 
-Constraints.Factory['perpendicular'] = function (refs, data) {
+Factory['perpendicular'] = function (refs, data) {
   return new Perpendicular(refs(data[0]), refs(data[1]));
 };
 
 // ------------------------------------------------------------------------------------------------------------------ //
 
-Constraints.Factory['P2LDistanceSigned'] = function (refs, data) {
+Factory['P2LDistanceSigned'] = function (refs, data) {
   return new P2LDistanceSigned(refs(data[0]), refs(data[1]), refs(data[2]), data[3]);
 };
 
 // ------------------------------------------------------------------------------------------------------------------ //
 
-Constraints.Factory['P2LDistance'] = function (refs, data) {
+Factory['P2LDistance'] = function (refs, data) {
   return new P2LDistance(refs(data[0]), refs(data[1]), data[2]);
 };
 
 // ------------------------------------------------------------------------------------------------------------------ //
 
-Constraints.Factory['MinLength'] = function (refs, data) {
+Factory['MinLength'] = function (refs, data) {
   return new MinLength(refs(data[0]), refs(data[1]), data[2]);
 };
 
 // ------------------------------------------------------------------------------------------------------------------ //
 
-/** @constructor */
-Constraints.P2LDistanceV = function (p, l, d) {
-  this.p = p;
-  this.l = l;
-  this.d = d;
-};
-
-Constraints.P2LDistanceV.prototype.aux = true;
-Constraints.P2LDistanceV.prototype.NAME = 'P2LDistanceV';
-Constraints.P2LDistanceV.prototype.UI_NAME = 'Distance P & L';
-
-Constraints.P2LDistanceV.prototype.getSolveData = function () {
-  var params = [];
-  this.p.collectParams(params);
-  this.l.collectParams(params);
-  params.push(this.d);
-  return [[this.NAME, params]];
-};
-
-// We don't serialize auxiliary constraints
-//
-//Constraints.P2LDistanceV.prototype.serialize = function() {
-//  return [this.NAME, [this.p.id, this.l.id, this.d.id]];
-//};
-//
-//Constraints.Factory[Constraints.P2LDistanceV.prototype.NAME] = function(refs, data) {
-//  return new Constraints.P2LDistanceV(refs(data[0]), refs(data[1]), refs(data[2]));
-//};
-
-// ------------------------------------------------------------------------------------------------------------------ //
-
-/** @constructor */
-Constraints.P2PDistance = function (p1, p2, d) {
-  this.p1 = p1;
-  this.p2 = p2;
-  this.d = d;
-};
-
-Constraints.P2PDistance.prototype.NAME = 'P2PDistance';
-Constraints.P2PDistance.prototype.UI_NAME = 'Distance Points';
-
-Constraints.P2PDistance.prototype.getSolveData = function (resolver) {
-  var params = [];
-  this.p1.collectParams(params);
-  this.p2.collectParams(params);
-  return [[this.NAME, params, [resolver(this.d)]]];
-};
-
-Constraints.P2PDistance.prototype.serialize = function () {
-  return [this.NAME, [this.p1.id, this.p2.id, this.d]];
-};
-
-Constraints.Factory[Constraints.P2PDistance.prototype.NAME] = function (refs, data) {
-  return new Constraints.P2PDistance(refs(data[0]), refs(data[1]), data[2]);
-};
-
-Constraints.P2PDistance.prototype.getObjects = function () {
-  return [this.p1, this.p2];
-};
-
-Constraints.P2PDistance.prototype.SettableFields = { 'd': "Enter the distance" };
-
-// ------------------------------------------------------------------------------------------------------------------ //
-
-/** @constructor */
-Constraints.P2PDistanceV = function (p1, p2, d) {
-  this.p1 = p1;
-  this.p2 = p2;
-  this.d = d;
-};
-
-Constraints.P2PDistanceV.prototype.aux = true;
-Constraints.P2PDistanceV.prototype.NAME = 'P2PDistanceV';
-Constraints.P2PDistanceV.prototype.UI_NAME = 'Distance Points';
-
-Constraints.P2PDistanceV.prototype.getSolveData = function () {
-  var params = [];
-  this.p1.collectParams(params);
-  this.p2.collectParams(params);
-  params.push(this.d);
-  return [[this.NAME, params]];
-};
-
-// We don't serialize auxiliary constraints
-//
-//Constraints.P2PDistanceV.prototype.serialize = function() {
-//  return [this.NAME, [this.p1.id, this.p2.id, this.d.id]];
-//};
-//
-//Constraints.Factory[Constraints.P2PDistanceV.prototype.NAME] = function(refs, data) {
-//  return new Constraints.P2PDistanceV(refs(data[0]), refs(data[1]), refs(data[2]));
-//};
-
-// ------------------------------------------------------------------------------------------------------------------ //
-
-/** @constructor */
-Constraints.GreaterThan = function (p, limit) {
-  this.p = p;
-  this.limit = limit;
-};
-
-Constraints.GreaterThan.prototype.aux = true;
-Constraints.GreaterThan.prototype.NAME = 'GreaterThan';
-Constraints.GreaterThan.prototype.UI_NAME = 'Greater Than';
-
-Constraints.GreaterThan.prototype.getSolveData = function () {
-  return [[this.NAME, [this.p], [this.limit]]];
+Factory['P2LDistanceV'] = function (refs, data) {
+  return new P2LDistanceV(refs(data[0]), refs(data[1]), data[2]);
 };
 
 // ------------------------------------------------------------------------------------------------------------------ //
 
-/** @constructor */
-Constraints.Radius = function (arc, d) {
-  this.arc = arc;
-  this.d = d;
-};
-
-Constraints.Radius.prototype.NAME = 'Radius';
-Constraints.Radius.prototype.UI_NAME = 'Radius Value';
-
-
-Constraints.Radius.prototype.getSolveData = function (resolver) {
-  return [['equalsTo', [this.arc.r], [resolver(this.d)]]];
-};
-
-Constraints.Radius.prototype.serialize = function () {
-  return [this.NAME, [this.arc.id, this.d]];
-};
-
-Constraints.Factory[Constraints.Radius.prototype.NAME] = function (refs, data) {
-  return new Constraints.Radius(refs(data[0]), data[1]);
-};
-
-Constraints.Radius.prototype.getObjects = function () {
-  return [this.arc];
-};
-
-Constraints.Radius.prototype.SettableFields = { 'd': "Enter the radius value" };
-
-// ------------------------------------------------------------------------------------------------------------------ //
-
-/** @constructor */
-Constraints.RR = function (arc1, arc2) {
-  this.arc1 = arc1;
-  this.arc2 = arc2;
-};
-
-Constraints.RR.prototype.NAME = 'RR';
-Constraints.RR.prototype.UI_NAME = 'Radius Equality';
-//Constraints.RR.prototype.reducible = true;
-
-
-Constraints.RR.prototype.getSolveData = function () {
-  return [['equal', [this.arc1.r, this.arc2.r], []]];
-};
-
-Constraints.RR.prototype.serialize = function () {
-  return [this.NAME, [this.arc1.id, this.arc2.id]];
-};
-
-Constraints.Factory[Constraints.RR.prototype.NAME] = function (refs, data) {
-  return new Constraints.RR(refs(data[0]), refs(data[1]));
-};
-
-Constraints.RR.prototype.getObjects = function () {
-  return [this.arc1, this.arc2];
+Factory['P2PDistance'] = function (refs, data) {
+  return new P2PDistance(refs(data[0]), refs(data[1]), data[2]);
 };
 
 // ------------------------------------------------------------------------------------------------------------------ //
 
-/** @constructor */
-Constraints.LL = function (line1, line2) {
-  this.line1 = line1;
-  this.line2 = line2;
-  this.length = new Ref(math.distanceAB(line1.a, line1.b));
-};
-
-Constraints.LL.prototype.NAME = 'LL';
-Constraints.LL.prototype.UI_NAME = 'Lines Equality';
-
-Constraints.LL.prototype.getSolveData = function () {
-  var params1 = [];
-  var params2 = [];
-  this.line1.collectParams(params1);
-  this.line2.collectParams(params2);
-  params1.push(this.length);
-  params2.push(this.length);
-  return [
-    ['P2PDistanceV', params1, []],
-    ['P2PDistanceV', params2, []]
-  ];
-};
-
-Constraints.LL.prototype.serialize = function () {
-  return [this.NAME, [this.line1.id, this.line2.id]];
-};
-
-Constraints.Factory[Constraints.LL.prototype.NAME] = function (refs, data) {
-  return new Constraints.LL(refs(data[0]), refs(data[1]));
-};
-
-Constraints.LL.prototype.getObjects = function () {
-  return [this.line1, this.line2];
+Factory['P2PDistanceV'] = function (refs, data) {
+  return new P2PDistanceV(refs(data[0]), refs(data[1]), data[2]);
 };
 
 // ------------------------------------------------------------------------------------------------------------------ //
 
-/** @constructor */
-Constraints.Vertical = function (line) {
-  this.line = line;
-};
-
-Constraints.Vertical.prototype.NAME = 'Vertical';
-Constraints.Vertical.prototype.UI_NAME = 'Vertical';
-//Constraints.Vertical.prototype.reducible = true;
-
-Constraints.Vertical.prototype.getSolveData = function () {
-  return [['equal', [this.line.a._x, this.line.b._x], []]];
-};
-
-Constraints.Vertical.prototype.serialize = function () {
-  return [this.NAME, [this.line.id]];
-};
-
-Constraints.Factory[Constraints.Vertical.prototype.NAME] = function (refs, data) {
-  return new Constraints.Vertical(refs(data[0]));
-};
-
-Constraints.Vertical.prototype.getObjects = function () {
-  return [this.line];
+Factory['GreaterThan'] = function (refs, data) {
+  return new GreaterThan(refs(data[0]), refs(data[1]));
 };
 
 // ------------------------------------------------------------------------------------------------------------------ //
 
-/** @constructor */
-Constraints.Horizontal = function (line) {
-  this.line = line;
-};
-
-Constraints.Horizontal.prototype.NAME = 'Horizontal';
-Constraints.Horizontal.prototype.UI_NAME = 'Horizontal';
-//Constraints.Horizontal.prototype.reducible = true;
-
-Constraints.Horizontal.prototype.getSolveData = function () {
-  return [['equal', [this.line.a._y, this.line.b._y], []]];
-};
-
-Constraints.Horizontal.prototype.serialize = function () {
-  return [this.NAME, [this.line.id]];
-};
-
-Constraints.Factory[Constraints.Horizontal.prototype.NAME] = function (refs, data) {
-  return new Constraints.Horizontal(refs(data[0]));
-};
-
-Constraints.Horizontal.prototype.getObjects = function () {
-  return [this.line];
+Factory['Radius'] = function (refs, data) {
+  return new Radius(refs(data[0]), data[1]);
 };
 
 // ------------------------------------------------------------------------------------------------------------------ //
 
-/** @constructor */
-Constraints.Tangent = function (arc, line) {
-  this.arc = arc;
-  this.line = line;
-};
-
-Constraints.Tangent.prototype.NAME = 'Tangent';
-Constraints.Tangent.prototype.UI_NAME = 'Tangent';
-
-Constraints.Tangent.prototype.getSolveData = function () {
-  var params = [];
-  this.arc.c.collectParams(params);
-  this.line.collectParams(params);
-  params.push(this.arc.r);
-  return [['P2LDistanceV', params, []]];
-};
-
-Constraints.Tangent.prototype.serialize = function () {
-  return [this.NAME, [this.arc.id, this.line.id]];
-};
-
-Constraints.Factory[Constraints.Tangent.prototype.NAME] = function (refs, data) {
-  return new Constraints.Tangent(refs(data[0]), refs(data[1]));
-};
-
-Constraints.Tangent.prototype.getObjects = function () {
-  return [this.arc, this.line];
+Factory['RR'] = function (refs, data) {
+  return new RadiusEquality(refs(data[0]), refs(data[1]));
 };
 
 // ------------------------------------------------------------------------------------------------------------------ //
 
-/** @constructor */
-Constraints.PointOnLine = function (point, line) {
-  this.point = point;
-  this.line = line;
-};
-
-Constraints.PointOnLine.prototype.NAME = 'PointOnLine';
-Constraints.PointOnLine.prototype.UI_NAME = 'Point On Line';
-
-Constraints.PointOnLine.prototype.getSolveData = function () {
-  var params = [];
-  this.point.collectParams(params);
-  this.line.collectParams(params);
-  return [['P2LDistance', params, [0]]];
-};
-
-Constraints.PointOnLine.prototype.serialize = function () {
-  return [this.NAME, [this.point.id, this.line.id]];
-};
-
-Constraints.Factory[Constraints.PointOnLine.prototype.NAME] = function (refs, data) {
-  return new Constraints.PointOnLine(refs(data[0]), refs(data[1]));
-};
-
-Constraints.PointOnLine.prototype.getObjects = function () {
-  return [this.point, this.line];
+Factory['LL'] = function (refs, data) {
+  return new LineEquality(refs(data[0]), refs(data[1]));
 };
 
 // ------------------------------------------------------------------------------------------------------------------ //
 
-/** @constructor */
-Constraints.PointOnArc = function (point, arc) {
-  this.point = point;
-  this.arc = arc;
-};
-
-Constraints.PointOnArc.prototype.NAME = 'PointOnArc';
-Constraints.PointOnArc.prototype.UI_NAME = 'Point On Arc';
-
-Constraints.PointOnArc.prototype.getSolveData = function () {
-  var params = [];
-  this.point.collectParams(params);
-  this.arc.c.collectParams(params);
-  params.push(this.arc.r);
-  return [['P2PDistanceV', params, []]];
-};
-
-Constraints.PointOnArc.prototype.serialize = function () {
-  return [this.NAME, [this.point.id, this.arc.id]];
-};
-
-Constraints.Factory[Constraints.PointOnArc.prototype.NAME] = function (refs, data) {
-  return new Constraints.PointOnArc(refs(data[0]), refs(data[1]));
-};
-
-Constraints.PointOnArc.prototype.getObjects = function () {
-  return [this.point, this.arc];
+Factory['Vertical'] = function (refs, data) {
+  return new Vertical(refs(data[0]));
 };
 
 // ------------------------------------------------------------------------------------------------------------------ //
 
-/** @constructor */
-Constraints.PointOnEllipseInternal = function (point, ellipse) {
-  this.point = point;
-  this.ellipse = ellipse;
-};
-
-Constraints.PointOnEllipseInternal.prototype.NAME = 'PointOnEllipseI';
-Constraints.PointOnEllipseInternal.prototype.UI_NAME = 'Point On Ellipse';
-Constraints.PointOnEllipseInternal.prototype.aux = true;
-
-Constraints.PointOnEllipseInternal.prototype.getSolveData = function () {
-  var params = [];
-  this.point.collectParams(params);
-  this.ellipse.ep1.collectParams(params);
-  this.ellipse.ep2.collectParams(params);
-  params.push(this.ellipse.r);
-  return [['PointOnEllipse', params, []]];
+Factory['Horizontal'] = function (refs, data) {
+  return new Horizontal(refs(data[0]));
 };
 
 // ------------------------------------------------------------------------------------------------------------------ //
 
-/** @constructor */
-Constraints.PointOnEllipse = function (point, ellipse) {
-  Constraints.PointOnEllipseInternal.call(this, point, ellipse);
-};
-
-Constraints.PointOnEllipse.prototype.NAME = 'PointOnEllipse';
-Constraints.PointOnEllipse.prototype.UI_NAME = 'Point On Ellipse';
-
-Constraints.PointOnEllipse.prototype.getSolveData = function () {
-  return Constraints.PointOnEllipseInternal.prototype.getSolveData.call(this);
-};
-
-Constraints.PointOnEllipse.prototype.serialize = function () {
-  return [this.NAME, [this.point.id, this.ellipse.id]];
-};
-
-Constraints.Factory[Constraints.PointOnEllipse.prototype.NAME] = function (refs, data) {
-  return new Constraints.PointOnEllipse(refs(data[0]), refs(data[1]));
-};
-
-Constraints.PointOnEllipse.prototype.getObjects = function () {
-  return [this.point, this.ellipse];
+Factory['Tangent'] = function (refs, data) {
+  return new Tangent(refs(data[0]), refs(data[1]));
 };
 
 // ------------------------------------------------------------------------------------------------------------------ //
 
-/** @constructor */
-Constraints.EllipseTangent = function (line, ellipse) {
-  this.line = line;
-  this.ellipse = ellipse;
+Factory['PointOnLine'] = function (refs, data) {
+  return new PointOnLine(refs(data[0]), refs(data[1]));
 };
+// ------------------------------------------------------------------------------------------------------------------ //
 
-Constraints.EllipseTangent.prototype.NAME = 'EllipseTangent';
-Constraints.EllipseTangent.prototype.UI_NAME = 'Tangent Ellipse';
-
-Constraints.EllipseTangent.prototype.getSolveData = function () {
-  const params = [];
-  this.line.collectParams(params);
-  this.ellipse.ep1.collectParams(params);
-  this.ellipse.ep2.collectParams(params);
-  params.push(this.ellipse.r);
-  return [['EllipseTangent', params, []]];
-
-};
-
-Constraints.EllipseTangent.prototype.serialize = function () {
-  return [this.NAME, [this.line.id, this.ellipse.id]];
-};
-
-Constraints.Factory[Constraints.EllipseTangent.prototype.NAME] = function (refs, data) {
-  return new Constraints.EllipseTangent(refs(data[0]), refs(data[1]));
-};
-
-Constraints.EllipseTangent.prototype.getObjects = function () {
-  return [this.line, this.ellipse];
+Factory['PointOnArc'] = function (refs, data) {
+  return new PointOnArc(refs(data[0]), refs(data[1]));
 };
 
 // ------------------------------------------------------------------------------------------------------------------ //
 
-/** @constructor */
-Constraints.PointInMiddle = function (point, line) {
-  this.point = point;
-  this.line = line;
-  this.length = new Ref(math.distanceAB(line.a, line.b) / 2);
-};
-
-Constraints.PointInMiddle.prototype.NAME = 'PointInMiddle';
-Constraints.PointInMiddle.prototype.UI_NAME = 'Point In the Middle';
-
-Constraints.PointInMiddle.prototype.getSolveData = function () {
-  var params1 = [];
-  var params2 = [];
-
-  this.line.a.collectParams(params1);
-  this.point.collectParams(params1);
-  params1.push(this.length);
-
-  this.line.b.collectParams(params2);
-  this.point.collectParams(params2);
-  params2.push(this.length);
-
-  return [
-    ['P2PDistanceV', params1, []],
-    ['P2PDistanceV', params2, []]
-  ];
-};
-
-Constraints.PointInMiddle.prototype.serialize = function () {
-  return [this.NAME, [this.point.id, this.line.id]];
-};
-
-Constraints.Factory[Constraints.PointInMiddle.prototype.NAME] = function (refs, data) {
-  return new Constraints.PointInMiddle(refs(data[0]), refs(data[1]));
-};
-
-Constraints.PointInMiddle.prototype.getObjects = function () {
-  return [this.point, this.line];
+Factory['PointOnEllipseInternal'] = function (refs, data) {
+  return new PointOnEllipseInternal(refs(data[0]), refs(data[1]));
 };
 
 // ------------------------------------------------------------------------------------------------------------------ //
 
-/** @constructor */
-Constraints.Symmetry = function (point, line) {
-  this.point = point;
-  this.line = line;
-  this.length = new Ref(math.distanceAB(line.a, line.b) / 2);
-};
-
-Constraints.Symmetry.prototype.NAME = 'Symmetry';
-Constraints.Symmetry.prototype.UI_NAME = 'Symmetry';
-
-Constraints.Symmetry.prototype.getSolveData = function (resolver) {
-  var pointInMiddleData = Constraints.PointInMiddle.prototype.getSolveData.call(this, [resolver]);
-  var pointOnLineData = Constraints.PointOnLine.prototype.getSolveData.call(this, [resolver]);
-  return pointInMiddleData.concat(pointOnLineData);
-};
-
-Constraints.Symmetry.prototype.serialize = function () {
-  return [this.NAME, [this.point.id, this.line.id]];
-};
-
-Constraints.Factory[Constraints.Symmetry.prototype.NAME] = function (refs, data) {
-  return new Constraints.Symmetry(refs(data[0]), refs(data[1]));
-};
-
-Constraints.Symmetry.prototype.getObjects = function () {
-  return [this.point, this.line];
+Factory['PointOnEllipse'] = function (refs, data) {
+  return new PointOnEllipse(refs(data[0]), refs(data[1]));
 };
 
 // ------------------------------------------------------------------------------------------------------------------ //
 
-/** @constructor */
-Constraints.Angle = function (p1, p2, p3, p4, angle) {
-  this.p1 = p1;
-  this.p2 = p2;
-  this.p3 = p3;
-  this.p4 = p4;
-  this._angle = new Ref(0);
-  this.angle = angle;
-};
-
-Constraints.Angle.prototype.NAME = 'Angle';
-Constraints.Angle.prototype.UI_NAME = 'Lines Angle';
-
-Constraints.Angle.prototype.getSolveData = function (resolver) {
-  this._angle.set(resolver(this.angle) / 180 * Math.PI);
-  var params = [];
-  this.p1.collectParams(params);
-  this.p2.collectParams(params);
-  this.p3.collectParams(params);
-  this.p4.collectParams(params);
-  params.push(this._angle);
-  return [['angleConst', params, []]];
-};
-
-Constraints.Angle.prototype.serialize = function () {
-  return [this.NAME, [this.p1.id, this.p2.id, this.p3.id, this.p4.id, this.angle]];
-};
-
-Constraints.Factory[Constraints.Angle.prototype.NAME] = function (refs, data) {
-  return new Constraints.Angle(refs(data[0]), refs(data[1]), refs(data[2]), refs(data[3]), data[4]);
-};
-
-Constraints.Angle.prototype.getObjects = function () {
-  var collector = new Constraints.ParentsCollector();
-  collector.check(this.p1);
-  collector.check(this.p2);
-  collector.check(this.p3);
-  collector.check(this.p4);
-  return collector.parents;
-};
-
-Constraints.Angle.prototype.SettableFields = { 'angle': "Enter the angle value" };
-
-// ------------------------------------------------------------------------------------------------------------------ //
-
-/** @constructor */
-Constraints.LockConvex = function (c, a, t) {
-  this.c = c;
-  this.a = a;
-  this.t = t;
-};
-
-Constraints.LockConvex.prototype.NAME = 'LockConvex';
-Constraints.LockConvex.prototype.UI_NAME = 'Lock Convexity';
-
-Constraints.LockConvex.prototype.getSolveData = function () {
-  var params = [];
-  this.c.collectParams(params);
-  this.a.collectParams(params);
-  this.t.collectParams(params);
-  return [['LockConvex', params, []]];
-};
-
-Constraints.LockConvex.prototype.serialize = function () {
-  return [this.NAME, [this.c.id, this.a.id, this.t.id]];
-};
-
-Constraints.Factory[Constraints.LockConvex.prototype.NAME] = function (refs, data) {
-  return new Constraints.LockConvex(refs(data[0]), refs(data[1]), refs(data[2]));
-};
-
-Constraints.LockConvex.prototype.getObjects = function () {
-  var collector = new Constraints.ParentsCollector();
-  collector.check(this.c);
-  collector.check(this.a);
-  collector.check(this.t);
-  return collector.parents;
+Factory['EllipseTangent'] = function (refs, data) {
+  return new EllipseTangent(refs(data[0]), refs(data[1]));
 };
 
 // ------------------------------------------------------------------------------------------------------------------ //
-function createByConstraintName(name, params, values) {
-  switch (name) {
-    case "equal":
-      return new Constraints.Equal(params);
-    case "equalsTo":
-      return new Constraints.EqualsTo(params, values[0]);
-    case "Diff":
-      return new Constraints.Diff(params, values[0]);
-    case "MinLength":
-      return new Constraints.MinLength(params, values[0]);
-    case "perpendicular":
-      return new Constraints.Perpendicular(params);
-    case "parallel":
-      return new Constraints.Parallel(params);
-    case "P2LDistanceSigned":
-      return new Constraints.P2LDistanceSigned(params, values[0]);
-    case "P2LDistance":
-      return new Constraints.P2LDistance(params, values[0]);
-    case "P2LDistanceV":
-      return new Constraints.P2LDistanceV(params);
-    case "P2PDistance":
-      return new Constraints.P2PDistance(params, values[0]);
-    case "P2PDistanceV":
-      return new Constraints.P2PDistanceV(params);
-    case "PointOnEllipse":
-      return new Constraints.PointOnEllipse(params);
-    case "EllipseTangent":
-      return new Constraints.EllipseTangent(params);
-    case "angle":
-      return new Constraints.Angle(params);
-    case "angleConst":
-      var _ = true,
-        x = false;
-      // Exclude angle value from parameters
-      return new Constraints.ConstantWrapper(new Constraints.Angle(params), [x, x, x, x, x, x, x, x, _]);
-    case 'LockConvex':
-      return new Constraints.LockConvex(params);
-    case 'GreaterThan':
-      return new Constraints.GreaterThan(params, values[0]);
 
-  }
+Factory['PointInMiddle'] = function (refs, data) {
+  return new PointInMiddle(refs(data[0]), refs(data[1]));
+};
+
+// ------------------------------------------------------------------------------------------------------------------ //
+
+Factory['Symmetry'] = function (refs, data) {
+  return new Symmetry(refs(data[0]), refs(data[1]));
+};
+
+// ------------------------------------------------------------------------------------------------------------------ //
+
+Factory['Angle'] = function (refs, data) {
+  return new Angle(refs(data[0]), refs(data[1]), refs(data[2]), refs(data[3]), data[4]);
+};
+
+// ------------------------------------------------------------------------------------------------------------------ //
+
+Factory['LockConvex'] = function (refs, data) {
+  return new LockConvex(refs(data[0]), refs(data[1]), refs(data[2]));
+};
+
+// ------------------------------------------------------------------------------------------------------------------ //
+
+
+
+export {
+  SubSystem,
+  Constraint,
+  Coincident,
+  RadiusOffset,
+  Lock,
+  Parallel,
+  Perpendicular,
+  P2LDistanceSigned,
+  P2LDistance,
+  MinLength,
+  P2LDistanceV,
+  P2PDistance,
+  P2PDistanceV,
+  GreaterThan,
+  Radius,
+  RadiusEquality,
+  LineEquality,
+  Vertical,
+  Horizontal,
+  Tangent,
+  PointOnLine,
+  PointOnArc,
+  PointOnEllipseInternal,
+  PointOnEllipse,
+  EllipseTangent,
+  PointInMiddle,
+  Symmetry,
+  Angle,
+  LockConvex
 }
-export { Constraints, SubSystem, createByConstraintName }

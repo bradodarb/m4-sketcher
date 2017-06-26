@@ -1,7 +1,6 @@
 import { SketchObject } from './sketch-shape.render-model';
 import { EndPoint } from './end-point.render-model';
 import Vector from '../../math/vector';
-import { Constraints } from '../../constraints';
 import * as math from '../../math/math';
 import { Viewport2d } from '../../viewport';
 
