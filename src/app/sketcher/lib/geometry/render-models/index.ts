@@ -10,6 +10,10 @@ import { ReferencePoint } from './reference-point.render-model'
 import { Segment } from './segment.render-model';
 import { Shape } from './shape.render-model';
 import { SketchObject } from './sketch-shape.render-model';
+import { LinearDimension } from './dimension-linear.render-model';
+import { HorizontalDimension } from './dimension-horizontal.render-model';
+import { VerticalDimension } from './dimension-vertical.render-model';
+import { DiameterDimension } from './dimension-diameter.render-model';
 
 
 
@@ -20,9 +24,13 @@ export {
   Ellipse,
   EllipticalArc,
   EndPoint,
+  DiameterDimension,
+  HorizontalDimension,
+  LinearDimension,
   Point,
   ReferencePoint,
   Segment,
   Shape,
-  SketchObject
+  SketchObject,
+  VerticalDimension
 }

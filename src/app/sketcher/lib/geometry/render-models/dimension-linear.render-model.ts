@@ -7,8 +7,8 @@ import { Viewport2d } from '../../viewport';
 
 export class LinearDimension extends SketchObject {
 
-  private a;
-  private b;
+  protected a;
+  protected b;
   public flip: boolean;
 
   constructor(a, b, className = 'TCAD.TWO.Dimension') {

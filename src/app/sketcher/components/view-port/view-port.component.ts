@@ -13,7 +13,7 @@ import { Observable } from 'rxjs/Rx';
 
 import { WindowRef } from '../../services/window.service';
 import { Viewport2d } from '../../lib/viewport';
-import { PointTool, ArcTool, CircleTool } from '../../lib/tools';
+import { PointTool, ArcTool, CircleTool, DiameterDimensionTool } from '../../lib/tools';
 
 @Component({
   selector: 'm4-sketcher-view-port',
@@ -55,5 +55,8 @@ export class ViewPortComponent implements OnInit {
 
   addCircle() {
     this.viewport.toolManager.takeControl(new CircleTool(this.viewport));
+  }
+  addDiameterDimension() {
+    this.viewport.toolManager.takeControl(new DiameterDimensionTool(this.viewport, this.viewport.dimLayer));
   }
 }

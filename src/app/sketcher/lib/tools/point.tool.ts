@@ -1,4 +1,4 @@
-import { EndPoint } from '../geometry/render-models'
+import { EndPoint } from '../geometry/render-models';
 import { Viewport2d } from '../viewport';
 import { Tool } from './tool'
 
