@@ -533,16 +533,15 @@ export class ParametricManager {
     return out;
   }
 
-  solve(lock = null, extraConstraints = null, disabledObjects = null) {
+  solve(lock = [], extraConstraints = [], disabledObjects = []) {
     const solver = this.prepare(lock, extraConstraints, disabledObjects);
     solver.solve(false);
     solver.sync();
   }
-  prepare(locked, extraConstraints = null, disabledObjects = null) {
+  prepare(locked, extraConstraints = [], disabledObjects = []) {
     return this._prepare(locked, this.subSystems, extraConstraints, disabledObjects);
   }
   _prepare(locked, subSystems, extraConstraints, disabledObjects) {
-    console.log('Locked @ _prepare', locked)
     var solvers = [];
     for (var i = 0; i < subSystems.length; i++) {
       solvers.push(this.prepareForSubSystem(locked, subSystems[i].constraints, extraConstraints, disabledObjects));
@@ -616,7 +615,7 @@ export class ParametricManager {
     return v.id;
   }
 
-  static reduceSystem(system, readOnlyParams) {
+  static reduceSystem(system, readOnlyParams: Array<Parameter> = []) {
 
     var info = {
       idToParam: {},
@@ -762,7 +761,6 @@ export class ParametricManager {
   }
   prepareForSubSystem(locked: Array<Parameter> = new Array<Parameter>(), subSystemConstraints: Array<Constraint>,
     extraConstraints = null, disabledObjects = null) {
-    console.log('Locked @ prepareForSubSystem:  ', (locked));
 
     var constrs = [];
     var solverParamsDict = {};
@@ -777,9 +775,7 @@ export class ParametricManager {
     var readOnlyParams = auxParams.concat(locked);
     var reduceInfo = ParametricManager.reduceSystem(system, readOnlyParams);
 
-    console.log('Locked+Aux Params @ prepareForSubSystem:  ', (locked));
     function getSolverParam(p: Parameter) {
-      console.log('@getSolverParam', p)
       var master = reduceInfo.reducedParams[p.id];
       if (master !== undefined) {
         p = reduceInfo.idToParam[master];
@@ -823,7 +819,6 @@ export class ParametricManager {
 
       for (let p = 0; p < sdata[1].length; ++p) {
         const param = sdata[1][p];
-        console.log('@prepareforsubsystem for->sdata', locked[p])
         const solverParam = getSolverParam(param);
         solverParam.aux = auxDict[param.id] !== undefined;
         params.push(solverParam);
@@ -836,10 +831,9 @@ export class ParametricManager {
 
     var lockedSolverParams = [];
     for (let p = 0; p < locked.length; ++p) {
-      console.log('@prepareforsubsystem for->locked', locked[p])
       lockedSolverParams[p] = getSolverParam(locked[p]);
     }
-    console.log('@prepareforsubsystem.buildSolver', constrs, lockedSolverParams)
+
     const solver: any = prepare(constrs, lockedSolverParams);
     function solve(rough, alg) {
       return solver.solveSystem(rough, alg);
@@ -865,7 +859,6 @@ export class ParametricManager {
     }
 
     function updateParameter(p) {
-      console.log('@updateParameter', p)
       getSolverParam(p).set(p.get());
     }
 

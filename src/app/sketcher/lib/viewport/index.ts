@@ -32,6 +32,7 @@ export class Viewport2d {
 
   public translate: any = { x: 0.0, y: 0.0 };
   public scale: number = 1.0;
+  public dimScale: number = 1.0;
 
   public activeLayer: Layer;
   public layers: Array<Layer> = new Array<Layer>();
@@ -394,7 +395,6 @@ export class Viewport2d {
 
   equalizeLinkedEndpoints = function () {
     const visited = new Set();
-    console.log('Viewport.equalizeLinkedEndpoints called')
     function equalize(obj, link?) {
       if (visited.has(obj.id)) return;
       visited.add(obj.id);
@@ -415,40 +415,11 @@ export class Viewport2d {
   }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   private createServiceLayers(): Array<Array<Layer>> {
     let layer = new Layer("_service", DefaultStyles.SERVICE);
     //  layer.objects.push(new CrossHair(0, 0, 20));
     layer.objects.push(new Point(0, 0, 2));
-    //layer.objects.push(this.referencePoint);
+    // layer.objects.push(this.referencePoint);
     layer.objects.push(new Datum(null, this));
     return [[layer]];
 

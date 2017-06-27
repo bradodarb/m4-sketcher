@@ -19,9 +19,15 @@ export class Shape {
     return visitor(this);
   }
 
-  public draw(viewer: Viewport2d) {
-  }
+
+
+  public draw(viewer: Viewport2d) { }
   protected drawSelf(viewer: Viewport2d) { }
+
+  public translate(dx, dy) { }
+  protected translateSelf(dx, dy) { }
+
+
 
   public get className(): string {
     return this._className;

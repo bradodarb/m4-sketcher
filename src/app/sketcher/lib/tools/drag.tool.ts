@@ -98,7 +98,6 @@ export class DragTool extends Tool {
 
   prepareSolver(extraConstraints) {
     var locked = this.getParamsToLock();
-    console.log('Locked @ dragTool.prepareSolver', locked)
     this.lockedShifts = [];
     this.lockedValues = [];
     for (var i = 0; i < locked.length; i += 2) {

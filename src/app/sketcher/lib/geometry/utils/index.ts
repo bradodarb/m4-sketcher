@@ -31,3 +31,8 @@ export function equalizeLinkedEndpoints() {
     return true;
   });
 }
+
+//TODO, make this based on dimension style
+export function getTextOffset(scale) {
+  return 3 * scale;
+}
