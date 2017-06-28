@@ -10,18 +10,18 @@ export class Arc extends SketchObject {
 
   public a: EndPoint;
   public b: EndPoint;
-  public c: EndPoint;
+  public center: EndPoint;
   public radius: Ref;
 
-  constructor(a, b, c) {
+  constructor(a, b, center) {
     super('TCAD.TWO.Arc');
     this.a = a;
     this.b = b;
-    this.c = c;
+    this.center = center;
     a.parent = this;
     b.parent = this;
-    c.parent = this;
-    this.children.push(a, b, c);
+    center.parent = this;
+    this.children.push(a, b, center);
     this.radius = new Ref(this.distanceA());
     this.radius.obj = this;
   }
@@ -29,18 +29,18 @@ export class Arc extends SketchObject {
   collectParams(params) {
     this.a.collectParams(params);
     this.b.collectParams(params);
-    this.c.collectParams(params);
+    this.center.collectParams(params);
     params.push(this.radius);
   }
 
   getReferencePoint() {
-    return this.c;
+    return this.center;
   }
 
   translateImpl(dx, dy) {
     this.a.translate(dx, dy);
     this.b.translate(dx, dy);
-    this.c.translate(dx, dy);
+    this.center.translate(dx, dy);
   }
 
 
@@ -49,19 +49,19 @@ export class Arc extends SketchObject {
   }
 
   distanceA() {
-    return math.distance(this.a.x, this.a.y, this.c.x, this.c.y);
+    return math.distance(this.a.x, this.a.y, this.center.x, this.center.y);
   }
 
   distanceB() {
-    return math.distance(this.b.x, this.b.y, this.c.x, this.c.y);
+    return math.distance(this.b.x, this.b.y, this.center.x, this.center.y);
   }
 
   getStartAngle() {
-    return Math.atan2(this.a.y - this.c.y, this.a.x - this.c.x);
+    return Math.atan2(this.a.y - this.center.y, this.a.x - this.center.x);
   }
 
   getEndAngle() {
-    return Math.atan2(this.b.y - this.c.y, this.b.x - this.c.x);
+    return Math.atan2(this.b.y - this.center.y, this.b.x - this.center.x);
   }
 
   drawSelf(viewport: Viewport2d) {
@@ -75,14 +75,14 @@ export class Arc extends SketchObject {
     } else {
       endAngle = this.getEndAngle();
     }
-    viewport.context.arc(this.c.x, this.c.y, r, startAngle, endAngle);
+    viewport.context.arc(this.center.x, this.center.y, r, startAngle, endAngle);
     var distanceB = this.distanceB();
     if (Math.abs(r - distanceB) * viewport.scale > 1) {
       var adj = r / distanceB;
       viewport.context.save();
       viewport.context.setLineDash([7 / viewport.scale]);
       viewport.context.lineTo(this.b.x, this.b.y);
-      viewport.context.moveTo(this.b.x + (this.b.x - this.c.x) / adj, this.b.y + (this.b.y - this.c.y) / adj);
+      viewport.context.moveTo(this.b.x + (this.b.x - this.center.x) / adj, this.b.y + (this.b.y - this.center.y) / adj);
       viewport.context.stroke();
       viewport.context.restore();
     } else {
@@ -91,9 +91,9 @@ export class Arc extends SketchObject {
   }
 
   isPointInsideSector(x, y) {
-    var ca = new Vector(this.a.x - this.c.x, this.a.y - this.c.y);
-    var cb = new Vector(this.b.x - this.c.x, this.b.y - this.c.y);
-    var ct = new Vector(x - this.c.x, y - this.c.y);
+    var ca = new Vector(this.a.x - this.center.x, this.a.y - this.center.y);
+    var cb = new Vector(this.b.x - this.center.x, this.b.y - this.center.y);
+    var ct = new Vector(x - this.center.x, y - this.center.y);
 
     ca._normalize();
     cb._normalize();
@@ -118,7 +118,7 @@ export class Arc extends SketchObject {
 
     var isInsideSector = this.isPointInsideSector(aim.x, aim.y);
     if (isInsideSector) {
-      return Math.abs(math.distance(aim.x, aim.y, this.c.x, this.c.y) - this.radiusForDrawing());
+      return Math.abs(math.distance(aim.x, aim.y, this.center.x, this.center.y) - this.radiusForDrawing());
     } else {
       return Math.min(
         math.distance(aim.x, aim.y, this.a.x, this.a.y),
@@ -129,12 +129,12 @@ export class Arc extends SketchObject {
 
   stabilize(viewer) {
     this.radius.set(this.distanceA());
-    viewer.parametricManager._add(new P2PDistanceV(this.b, this.c, this.radius));
-    viewer.parametricManager._add(new P2PDistanceV(this.a, this.c, this.radius));
+    viewer.parametricManager._add(new P2PDistanceV(this.b, this.center, this.radius));
+    viewer.parametricManager._add(new P2PDistanceV(this.a, this.center, this.radius));
   }
 
   copy() {
-    return new Arc(this.a.copy(), this.b.copy(), this.c.copy());
+    return new Arc(this.a.copy(), this.b.copy(), this.center.copy());
   }
 }
 

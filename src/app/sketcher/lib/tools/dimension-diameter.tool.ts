@@ -19,16 +19,22 @@ export class DiameterDimensionTool extends Tool {
         var p = this.viewer.screenToModel(e);
         var objects = this.viewer.search(p.x, p.y, 20 / this.viewer.scale, true, false, [])
             .filter(function(o) {
-                return o._class === 'TCAD.TWO.Circle' || o._class === 'TCAD.TWO.Arc';
+                return o.className === 'TCAD.TWO.Circle' || o.className === 'TCAD.TWO.Arc' || o.className === 'TCAD.TWO.DiameterDimension';
             });
 
         if (objects.length != 0) {
-            this.dim.obj = objects[0];
+          const target = objects[0];
+          if(target.className === 'TCAD.TWO.DiameterDimension'){
+            this.dim = target;
+          }else{
+            this.dim.obj = target;
+          }
         } else {
             this.dim.obj = null;
         }
+
         if (this.dim.obj != null) {
-            this.dim.angle = Math.atan2(p.y - this.dim.obj.c.y, p.x - this.dim.obj.c.x);
+            this.dim.angle = Math.atan2(p.y - this.dim.obj.center.y, p.x - this.dim.obj.center.x);
         }
         this.viewer.refresh();
     }

@@ -13,7 +13,7 @@ export class Tangent extends Constraint {
   }
   public getSolveData(resolver) {
     var params = [];
-    this.arc.c.collectParams(params);
+    this.arc.center.collectParams(params);
     this.line.collectParams(params);
     params.push(this.arc.radius);
     return [['P2LDistanceV', params, []]];

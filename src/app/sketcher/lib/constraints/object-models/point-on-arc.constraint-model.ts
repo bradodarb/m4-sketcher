@@ -14,7 +14,7 @@ export class PointOnArc extends Constraint {
   public getSolveData(resolver) {
     var params = [];
     this.point.collectParams(params);
-    this.arc.c.collectParams(params);
+    this.arc.center.collectParams(params);
     params.push(this.arc.radius);
     return [['P2PDistanceV', params, []]];
   }

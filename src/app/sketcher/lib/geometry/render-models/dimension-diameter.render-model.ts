@@ -5,6 +5,7 @@ import { SketchObject } from './sketch-shape.render-model';
 import { Circle } from './circle.render-model';
 import { Arc } from './arc.render-model';
 import { getTextOffset } from '../utils';
+import { Viewport2d } from '../../viewport';
 
 
 export class DiameterDimension extends SketchObject {
@@ -27,16 +28,16 @@ export class DiameterDimension extends SketchObject {
   translateImpl(dx, dy) {
   }
 
-  drawImpl(ctx, scale, viewer) {
+  drawSelf(viewer: Viewport2d) {
     if (this.obj == null) return;
     if (this.obj.className === 'TCAD.TWO.Circle') {
-      this.drawForCircle(ctx, scale, viewer);
+      this.drawForCircle(viewer);
     } else if (this.obj.className === 'TCAD.TWO.Arc') {
-      this.drawForArc(ctx, scale, viewer);
+      this.drawForArc(viewer);
     }
   }
 
-  drawForCircle(ctx, scale, viewer) {
+  drawForCircle(viewer: Viewport2d) {
     const circle = this.obj as Circle;
     var c = new Vector().setV(circle.center);
     var r = circle.radius.get();
@@ -47,16 +48,16 @@ export class DiameterDimension extends SketchObject {
 
     var d = 2 * r;
 
-    ctx.beginPath();
-    ctx.moveTo(a.x, a.y);
-    ctx.lineTo(b.x, b.y);
-    ctx.closePath();
-    ctx.stroke();
+    viewer.context.beginPath();
+    viewer.context.moveTo(a.x, a.y);
+    viewer.context.lineTo(b.x, b.y);
+    viewer.context.closePath();
+    viewer.context.stroke();
 
     var fontSize = 12 * viewer.dimScale;
-    ctx.font = (fontSize) + "px Arial";
+    viewer.context.font = (fontSize) + "px Arial";
     var txt = String.fromCharCode(216) + ' ' + d.toFixed(2);
-    var textWidth = ctx.measureText(txt).width;
+    var textWidth = viewer.context.measureText(txt).width;
     var h = d / 2 - textWidth / 2;
 
     var _vx = - (b.y - a.y);
@@ -67,12 +68,12 @@ export class DiameterDimension extends SketchObject {
     var _vyn = _vy / d;
 
     function drawText(tx, ty) {
-      ctx.save();
-      ctx.translate(tx, ty);
-      ctx.rotate(-Math.atan2(_vxn, _vyn));
-      ctx.scale(1, -1);
-      ctx.fillText(txt, 0, 0);
-      ctx.restore();
+      viewer.context.save();
+      viewer.context.translate(tx, ty);
+      viewer.context.rotate(-Math.atan2(_vxn, _vyn));
+      viewer.context.scale(1, -1);
+      viewer.context.fillText(txt, 0, 0);
+      viewer.context.restore();
     }
 
     var tx, ty;
@@ -84,11 +85,11 @@ export class DiameterDimension extends SketchObject {
       var off = 2 * viewer.dimScale;
       angled._normalize();
       var extraLine = angled.multiply(textWidth + off * 2);
-      ctx.beginPath();
-      ctx.moveTo(b.x, b.y);
-      ctx.lineTo(b.x + extraLine.x, b.y + extraLine.y);
-      ctx.closePath();
-      ctx.stroke();
+      viewer.context.beginPath();
+      viewer.context.moveTo(b.x, b.y);
+      viewer.context.lineTo(b.x + extraLine.x, b.y + extraLine.y);
+      viewer.context.closePath();
+      viewer.context.stroke();
       angled._multiply(off);
 
       tx = (b.x + _vxn * textOff) + angled.x;
@@ -97,7 +98,7 @@ export class DiameterDimension extends SketchObject {
     }
   }
 
-  drawForArc(ctx, scale, viewer) {
+  drawForArc(viewer: Viewport2d) {
 
     const arc = this.obj as Arc;
     var r = arc.distanceA();
@@ -109,9 +110,9 @@ export class DiameterDimension extends SketchObject {
     var vyn = hxn;
 
     //fix angle if needed
-    if (!arc.isPointInsideSector(arc.c.x + hxn, arc.c.y + hyn)) {
-      var cosA = hxn * (arc.a.x - arc.c.x) + hyn * (arc.a.y - arc.c.y);
-      var cosB = hxn * (arc.b.x - arc.c.x) + hyn * (arc.b.y - arc.c.y);
+    if (!arc.isPointInsideSector(arc.center.x + hxn, arc.center.y + hyn)) {
+      var cosA = hxn * (arc.a.x - arc.center.x) + hyn * (arc.a.y - arc.center.y);
+      var cosB = hxn * (arc.b.x - arc.center.x) + hyn * (arc.b.y - arc.center.y);
       if (cosA - hxn > cosB - hxn) {
         this.angle = arc.getStartAngle();
       } else {
@@ -123,28 +124,28 @@ export class DiameterDimension extends SketchObject {
     var horOff = 5 * viewer.dimScale;
 
     var fontSize = 12 * viewer.dimScale;
-    ctx.font = (fontSize) + "px Arial";
+    viewer.context.font = (fontSize) + "px Arial";
     var txt = 'R ' + r.toFixed(2);
-    var textWidth = ctx.measureText(txt).width;
+    var textWidth = viewer.context.measureText(txt).width;
 
-    var startX = arc.c.x + hxn * r;
-    var startY = arc.c.y + hyn * r;
+    var startX = arc.center.x + hxn * r;
+    var startY = arc.center.y + hyn * r;
     var lineLength = textWidth + horOff * 2;
 
-    ctx.beginPath();
-    ctx.moveTo(startX, startY);
-    ctx.lineTo(startX + hxn * lineLength, startY + hyn * lineLength);
-    ctx.closePath();
-    ctx.stroke();
+    viewer.context.beginPath();
+    viewer.context.moveTo(startX, startY);
+    viewer.context.lineTo(startX + hxn * lineLength, startY + hyn * lineLength);
+    viewer.context.closePath();
+    viewer.context.stroke();
 
     var tx = startX + vxn * vertOff + hxn * horOff;
     var ty = startY + vyn * vertOff + hyn * horOff;
-    ctx.save();
-    ctx.translate(tx, ty);
-    ctx.rotate(-Math.atan2(vxn, vyn));
-    ctx.scale(1, -1);
-    ctx.fillText(txt, 0, 0);
-    ctx.restore();
+    viewer.context.save();
+    viewer.context.translate(tx, ty);
+    viewer.context.rotate(-Math.atan2(vxn, vyn));
+    viewer.context.scale(1, -1);
+    viewer.context.fillText(txt, 0, 0);
+    viewer.context.restore();
   }
 
   normalDistance(aim) {

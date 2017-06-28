@@ -1,14 +1,15 @@
 import { Tool } from './tool';
 import { ArcTool } from './arc.tool';
 import { CircleTool } from './circle.tool';
-import { DimensionTool } from './dimension.tool';
-import { LinearDimensionTool } from './dimension-linear.tool';
-import { HorizontalDimensionTool } from './dimension-horizontal.tool';
 import { DiameterDimensionTool } from './dimension-diameter.tool';
-import { VerticalDimensionTool } from './dimension-vertical.tool';
+import { DimensionTool } from './dimension.tool';
+import { HorizontalDimensionTool } from './dimension-horizontal.tool';
+import { LinearDimensionTool } from './dimension-linear.tool';
 import { PointTool } from './point.tool';
+import { PanTool } from './pan.tool';
+import { RectangleTool } from './rectangle.tool';
 import { ToolManager } from './tool-manager';
-import { PanTool } from './pan.tool'
+import { VerticalDimensionTool } from './dimension-vertical.tool';
 
 
 export {
@@ -20,6 +21,7 @@ export {
   LinearDimensionTool,
   PanTool,
   PointTool,
+  RectangleTool,
   Tool,
   ToolManager,
   VerticalDimensionTool

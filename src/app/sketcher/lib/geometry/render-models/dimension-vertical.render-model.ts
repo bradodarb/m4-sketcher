@@ -1,8 +1,8 @@
 import * as utils from '../../util';
 import * as math from '../../math/math';
-import Vector from '../../math/vector';
-import { LinearDimension } from './dimension-linear.render-model';
+import Vector from '../../math/vector'
 import { SketchObject } from './sketch-shape.render-model';
+import { LinearDimension } from './dimension-linear.render-model';
 
 
 export class VerticalDimension extends LinearDimension {
@@ -19,3 +19,4 @@ export class VerticalDimension extends LinearDimension {
     return { x: this.a.x, y: this.b.y };
   }
 }
+
