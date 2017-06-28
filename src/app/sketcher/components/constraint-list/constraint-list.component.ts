@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
+import { ParametricManager } from '../../lib/parametrics';
 
 @Component({
   selector: 'm4-sketcher-constraint-list',
@@ -6,12 +7,35 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./constraint-list.component.css']
 })
 export class ConstraintListComponent implements OnInit {
+  @Input()
+  parametricManager: ParametricManager;
 
   constructor() { }
 
   ngOnInit() {
+    console.log(this.parametricManager);
   }
 
+  private getItems() {
+    var theItems = [];
+
+    for (var j = 0; j < this.parametricManager.subSystems.length; j++) {
+      var sub = this.parametricManager.subSystems[j];
+      for (var i = 0; i < sub.constraints.length; ++i) {
+        var constr = sub.constraints[i];
+        if (constr.aux !== true/* && app.constraintFilter[constr.NAME] != true*/) {
+          theItems.push({ name: constr.UI_NAME, constr: constr });
+        }
+      }
+    }
+    theItems.sort(function (a, b) {
+      if (a.constr.NAME == 'coi') {
+        return b.constr.NAME == 'coi' ? 0 : 1;
+      }
+      return a.constr.NAME.localeCompare(b.constr.NAME)
+    });
+    return theItems;
+  }
 }
 /*
   var pm = app.viewer.parametricManager;
