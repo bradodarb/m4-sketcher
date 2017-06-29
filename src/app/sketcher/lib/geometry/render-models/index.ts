@@ -1,6 +1,7 @@
 
 import { Arc } from './arc.render-model';
 import { Circle } from './circle.render-model';
+import { CrossHair } from './cross-hair.render-model';
 import { Datum } from './datum.render-model';
 import { Ellipse } from './ellipse.render-model';
 import { EllipticalArc } from './elliptical-arc.render-model';
@@ -20,6 +21,7 @@ import { DiameterDimension } from './dimension-diameter.render-model';
 export {
   Arc,
   Circle,
+  CrossHair,
   Datum,
   Ellipse,
   EllipticalArc,

@@ -50,25 +50,21 @@ export class SketchObject extends Shape {
     return false;
   }
 
-  _translate(dx, dy, translated) {
+  translate(dx, dy, translated = {}) {
+    if (this.isAuxOrLinkedTo()) {
+      return;
+    }
     translated[this.id] = 'x';
     for (var i = 0; i < this.linked.length; ++i) {
       if (translated[this.linked[i].id] != 'x') {
         this.linked[i]._translate(dx, dy, translated);
       }
     }
-    this.translateImpl(dx, dy);
+    this.translateSelf(dx, dy);
   };
 
-  translate(dx, dy) {
-    //  this.translateImpl(dx, dy);
-    if (this.isAuxOrLinkedTo()) {
-      return;
-    }
-    this._translate(dx, dy, {});
-  }
 
-  translateImpl(dx, dy) {
+  translateSelf(dx, dy) {
     this.accept(function (obj) {
       if (obj.className === 'TCAD.TWO.EndPoint') {
         obj.translate(dx, dy);

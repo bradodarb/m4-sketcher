@@ -466,7 +466,7 @@ class ParametricManager {
         }
     }
 
-    _linkObjects = function(objs) {
+    linkObjects = function(objs) {
         var i;
         var masterIdx = -1;
         for (i = 0; i < objs.length; ++i) {
@@ -487,11 +487,6 @@ class ParametricManager {
             var c = new Coincident(objs[i], objs[masterIdx]);
             this._add(c);
         }
-    }
-
-    linkObjects = function(objs) {
-        this._linkObjects(objs);
-
     }
 
     unlinkObjects = function(a, b) {
@@ -556,10 +551,7 @@ class ParametricManager {
     }
 
     prepare = function(locked, extraConstraints?, disabledObjects?) {
-        return this._prepare(locked, this.subSystems, extraConstraints, disabledObjects);
-    }
-
-    _prepare = function(locked, subSystems, extraConstraints, disabledObjects) {
+        const subSystems = this.subSystems;
         var solvers = [];
         for (var i = 0; i < subSystems.length; i++) {
             solvers.push(this.prepareForSubSystem(locked, subSystems[i].constraints, extraConstraints, disabledObjects));
@@ -756,14 +748,6 @@ class ParametricManager {
         };
 
         var links = [];
-
-        // function Link(a, b, constr) {
-        //     this.a = a;
-        //     this.b = b;
-        //     this.constr = constr;
-        //     this.invalid = false;
-        //     this.processed = false;
-        // }
 
         var c, pi, paramToConstraints = {};
         for (i = 0; i < system.length; ++i) {
