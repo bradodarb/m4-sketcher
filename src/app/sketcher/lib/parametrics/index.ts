@@ -1,3 +1,4 @@
+import { Subject } from 'rxjs/Rx';
 import {
   Constraint,
   Coincident,
@@ -28,6 +29,7 @@ import {
   Angle,
   LockConvex, SubSystem,
 } from '../constraints';
+import { System } from '../constraints/solver';
 import { createByConstraintName } from '../constraints/utils';
 
 import * as fetch from '../constraints/fetchers';
@@ -42,9 +44,9 @@ export class ParametricManager {
 
   public viewer: Viewport2d;
   public subSystems: Array<SubSystem> = new Array<SubSystem>();
-  public listeners = [];
   public constantTable = {};
   public constantResolver: any
+  public constraintStream = new Subject<any>();
 
   constructor(viewer: Viewport2d) {
     this.viewer = viewer;
@@ -67,13 +69,6 @@ export class ParametricManager {
         console.error("unable to resolve constant " + value);
       }
       return value;
-    }
-  }
-
-  notify(event) {
-    for (var i = 0; i < this.listeners.length; ++i) {
-      var l = this.listeners[i];
-      l(event);
     }
   }
 
@@ -102,6 +97,7 @@ export class ParametricManager {
     this.rebuildConstantTable(constantDefinition);
     this.refresh();
   }
+
   defineNewConstant(name, value) {
     // let constantDefinition = this.viewer.params.constantDefinition;
     // let constantText = name + ' = ' + value;
@@ -114,14 +110,27 @@ export class ParametricManager {
     // //disabling onConstantsExternalChange since we don't need re-solve
     // this.viewer.params.set('constantDefinition', constantDefinition, 'parametricManager');
   }
+
   findComponents(constr: Constraint) {
     if (this.subSystems.length === 0) {
       this.subSystems.push(new SubSystem());
     }
     return [0];
   }
-  tune(subSystem) {
 
+  tune(subSystem) {
+    //
+  }
+
+  refresh() {
+    this.solve();
+  }
+
+  notify(actionType: string, constraint) {
+    this.constraintStream.next({
+      action: actionType,
+      constraint: constraint
+    })
   }
 
   _add(constr: Constraint) {
@@ -146,8 +155,10 @@ export class ParametricManager {
         break;
     }
     subSystem.constraints.push(constr);
+    this.notify('add', constr);
     return subSystem;
   }
+
   checkRedundancy(subSystem, constr: Constraint) {
     var solver = this.prepareForSubSystem([], subSystem.constraints);
     if (solver.diagnose().conflict) {
@@ -155,10 +166,25 @@ export class ParametricManager {
     }
   }
 
-  refresh() {
-    this.solve();
-    //  this.notify();
-    this.viewer.refresh();
+  buildConstraintList() {
+    var result = [];
+
+    for (var j = 0; j < this.subSystems.length; j++) {
+      var sub = this.subSystems[j];
+      for (var i = 0; i < sub.constraints.length; ++i) {
+        var constr = sub.constraints[i];
+        if (constr.aux !== true/* && app.constraintFilter[constr.NAME] != true*/) {
+          result.push(constr);
+        }
+      }
+    }
+    result.sort(function (a, b) {
+      if (a.NAME == 'coi') {
+        return b.NAME == 'coi' ? 0 : 1;
+      }
+      return a.NAME.localeCompare(b.NAME)
+    });
+    return result;
   }
 
   add(constr: Constraint) {
@@ -166,14 +192,17 @@ export class ParametricManager {
     var subSystem = this._add(constr);
     this.checkRedundancy(subSystem, constr);
     this.refresh();
+
   }
 
   addAll(constrs: Array<Constraint>) {
+
     for (var i = 0; i < constrs.length; i++) {
       var subSystem = this._add(constrs[i]);
       this.checkRedundancy(subSystem, constrs[i]);
     }
     this.refresh();
+
   }
 
   remove(constr: Constraint) {
@@ -193,16 +222,17 @@ export class ParametricManager {
         }
       }
     }
+    this.notify('remove', constr);
     this.refresh();
-  }
 
+  }
 
   removeConstraintsByObj(obj) {
     var ownedParams = [];
     obj.collectParams(ownedParams);
     this.removeConstraintsByParams(ownedParams);
-  }
 
+  }
 
   removeConstraintsByParams(ownedParams) {
     for (var s = 0; s < this.subSystems.length; s++) {
@@ -228,13 +258,13 @@ export class ParametricManager {
       toRemove.sort();
 
       for (i = toRemove.length - 1; i >= 0; --i) {
+        this.notify('remove', toRemove[i]);
         sub.constraints.splice(toRemove[i], 1);
       }
     }
 
-    // this.notify();
-  }
 
+  }
 
   lock(objs) {
     var p = fetch.points(objs);
@@ -242,11 +272,19 @@ export class ParametricManager {
       this._add(new Lock(p[i], { x: p[i].x, y: p[i].y }));
     }
     this.refresh();
+
   }
+
+  coincident(objs) {
+    if (objs.length == 0) return;
+    this.linkObjects(objs);
+    this.solve();
+    this.viewer.refresh();
+  }
+
   vertical(objs) {
     this.addAll(fetch.lines(objs).map(line => new Vertical(line)));
   }
-
 
   horizontal(objs) {
     this.addAll(fetch.lines(objs).map(line => new Horizontal(line)));
@@ -265,6 +303,7 @@ export class ParametricManager {
     var lines = fetch.twoLines(objs);
     this.add(new Perpendicular(lines[0], lines[1]));
   }
+
   lockConvex(objs, warnCallback) {
     var lines = fetch.twoLines(objs);
     var l1 = lines[0];
@@ -333,8 +372,8 @@ export class ParametricManager {
       prev = arcs[i];
     }
     this.refresh();
-  }
 
+  }
 
   ll(lines) {
     var prev = lines[0];
@@ -344,14 +383,20 @@ export class ParametricManager {
     }
     this.refresh();
 
+
   }
 
   entityEquality(objs) {
     var arcs = fetch.generic(objs, ['TCAD.TWO.Arc', 'TCAD.TWO.Circle'], 0);
     var lines = fetch.generic(objs, ['TCAD.TWO.Segment'], 0);
-    if (arcs.length > 0) this.rr(arcs);
-    if (lines.length > 0) this.ll(lines);
+    if (arcs.length > 0) {
+      this.rr(arcs);
+    }
+    if (lines.length > 0) {
+      this.ll(lines);
+    }
   }
+
   p2lDistance(objs, promptCallback) {
     var pl = fetch.pointAndLine(objs);
 
@@ -377,6 +422,7 @@ export class ParametricManager {
     var pl = fetch.pointAndLine(objs);
     this.add(new Symmetry(pl[0], pl[1]));
   }
+
   pointOnArc(objs) {
     const points = fetch.generic(objs, ['TCAD.TWO.EndPoint'], 1);
     const arcs = fetch.generic(objs, ['TCAD.TWO.Arc', 'TCAD.TWO.Circle', 'TCAD.TWO.Ellipse', 'TCAD.TWO.EllipticalArc'], 1);
@@ -394,6 +440,7 @@ export class ParametricManager {
     var segment = pl[1];
     this.add(new PointOnLine(target, segment));
   }
+
   llAngle(objs, promptCallback) {
     var lines = fetch.generic(objs, 'TCAD.TWO.Segment', 2);
     var l1 = lines[0];
@@ -442,6 +489,7 @@ export class ParametricManager {
         this._add(new Radius(arcs[i], promptDistance));
       }
       this.refresh();
+
     }
   }
 
@@ -470,7 +518,7 @@ export class ParametricManager {
 
   linkObjects(objs) {
     this._linkObjects(objs);
-    // this.notify();
+
   }
 
   unlinkObjects(a, b) {
@@ -486,6 +534,7 @@ export class ParametricManager {
     }
     _unlink(a, b);
     _unlink(b, a);
+
   }
 
   findCoincidentConstraint(point1, point2): Coincident {
@@ -504,12 +553,7 @@ export class ParametricManager {
     }
     return null;
   }
-  coincident(objs) {
-    if (objs.length == 0) return;
-    this.linkObjects(objs);
-    this.solve();
-    this.viewer.refresh();
-  }
+
   getSolveData() {
     var sdata: Array<Constraint> = new Array<Constraint>();
     for (var i = 0; i < this.subSystems.length; i++) {
@@ -538,9 +582,11 @@ export class ParametricManager {
     solver.solve(false);
     solver.sync();
   }
+
   prepare(locked, extraConstraints = [], disabledObjects = []) {
     return this._prepare(locked, this.subSystems, extraConstraints, disabledObjects);
   }
+
   _prepare(locked, subSystems, extraConstraints, disabledObjects) {
     var solvers = [];
     for (var i = 0; i < subSystems.length; i++) {
@@ -585,6 +631,121 @@ export class ParametricManager {
     }
   }
 
+  __toId(v) {
+    return v.id;
+  }
+
+  prepareForSubSystem(locked: Array<Parameter> = new Array<Parameter>(),
+    subSystemConstraints: Array<Constraint>,
+    extraConstraints = null, disabledObjects = null) {
+
+    var constrs = [];
+    var solverParamsDict = {};
+    var system = [];
+    var auxParams: Array<Parameter> = new Array<Parameter>();
+    var auxDict = {};
+
+    this.__getSolveData(subSystemConstraints, system);
+    if (!!extraConstraints) this.__getSolveData(extraConstraints, system);
+
+    ParametricManager.fetchAuxParams(system, auxParams, auxDict, disabledObjects);
+    var readOnlyParams = auxParams.concat(locked);
+    var reduceInfo = ParametricManager.reduceSystem(system, readOnlyParams);
+
+    function getSolverParam(p: Parameter) {
+      var master = reduceInfo.reducedParams[p.id];
+      if (master !== undefined) {
+        p = reduceInfo.idToParam[master];
+      }
+
+      var _p = solverParamsDict[p.id];
+      if (_p === undefined) {
+        if (p.__cachedParam__ === undefined) {
+          _p = new Param(p.id, p.get());
+          p.__cachedParam__ = _p;
+        } else {
+          _p = p.__cachedParam__;
+          _p.reset(p.get());
+        }
+
+        _p._backingParam = p;
+        solverParamsDict[p.id] = _p;
+      }
+      return _p;
+    }
+
+    (function pickupAuxiliaryInfoFromSlaves() {
+      for (var i = 0; i < reduceInfo.linkedParams.length; ++i) {
+        var linkedParams = reduceInfo.linkedParams[i];
+        var master = linkedParams[0];
+        if (auxDict[master] !== undefined) continue;
+        for (var j = 1; j < linkedParams.length; j++) {
+          var slave = linkedParams[j];
+          if (auxDict[slave] !== undefined) {
+            auxDict[master] = true;
+            break;
+          }
+        }
+      }
+    })();
+
+    for (var i = 0; i < system.length; ++i) {
+
+      var sdata = system[i];
+      var params = [];
+
+      for (let p = 0; p < sdata[1].length; ++p) {
+        const param = sdata[1][p];
+        const solverParam = getSolverParam(param);
+        solverParam.aux = auxDict[param.id] !== undefined;
+        params.push(solverParam);
+      }
+      if (reduceInfo.reducedConstraints[i] === true) continue;
+
+      var _constr = createByConstraintName(sdata[0], params, sdata[2]);
+      constrs.push(_constr);
+    }
+
+    var lockedSolverParams = [];
+    for (let p = 0; p < locked.length; ++p) {
+      lockedSolverParams[p] = getSolverParam(locked[p]);
+    }
+
+    const solver: any = prepare(constrs, lockedSolverParams);
+    function solve(rough, alg) {
+      return solver.solveSystem(rough, alg);
+    }
+
+    const viewer = this.viewer;
+    function sync() {
+      for (var paramId in solverParamsDict) {
+        var solverParam = solverParamsDict[paramId];
+        if (!!solverParam._backingParam.aux) continue;
+        solverParam._backingParam.set(solverParam.get());
+      }
+
+      //Make sure all coincident constraints are equal
+      for (var ei = 0; ei < reduceInfo.linkedParams.length; ++ei) {
+        var master = reduceInfo.idToParam[reduceInfo.linkedParams[ei][0]];
+        for (var i = 1; i < reduceInfo.linkedParams[ei].length; ++i) {
+          var slave = reduceInfo.idToParam[reduceInfo.linkedParams[ei][i]];
+          slave.set(master.get());
+        }
+      }
+      viewer.equalizeLinkedEndpoints();
+    }
+
+    function updateParameter(p) {
+      getSolverParam(p).set(p.get());
+    }
+
+    solver.solve = solve;
+    solver.sync = sync;
+    solver.updateParameter = updateParameter;
+    return solver;
+
+  }
+
   static isAux(obj, disabledObjects = null) {
     while (!!obj) {
       if (!!obj.aux || (disabledObjects !== null && disabledObjects !== undefined && disabledObjects.has(obj))) {
@@ -610,9 +771,6 @@ export class ParametricManager {
         }
       }
     }
-  }
-  __toId(v) {
-    return v.id;
   }
 
   static reduceSystem(system, readOnlyParams: Array<Parameter> = []) {
@@ -758,114 +916,6 @@ export class ParametricManager {
       }
     }
     return info;
-  }
-  prepareForSubSystem(locked: Array<Parameter> = new Array<Parameter>(), subSystemConstraints: Array<Constraint>,
-    extraConstraints = null, disabledObjects = null) {
-
-    var constrs = [];
-    var solverParamsDict = {};
-    var system = [];
-    var auxParams: Array<Parameter> = new Array<Parameter>();
-    var auxDict = {};
-
-    this.__getSolveData(subSystemConstraints, system);
-    if (!!extraConstraints) this.__getSolveData(extraConstraints, system);
-
-    ParametricManager.fetchAuxParams(system, auxParams, auxDict, disabledObjects);
-    var readOnlyParams = auxParams.concat(locked);
-    var reduceInfo = ParametricManager.reduceSystem(system, readOnlyParams);
-
-    function getSolverParam(p: Parameter) {
-      var master = reduceInfo.reducedParams[p.id];
-      if (master !== undefined) {
-        p = reduceInfo.idToParam[master];
-      }
-
-      var _p = solverParamsDict[p.id];
-      if (_p === undefined) {
-        if (p.__cachedParam__ === undefined) {
-          _p = new Param(p.id, p.get());
-          p.__cachedParam__ = _p;
-        } else {
-          _p = p.__cachedParam__;
-          _p.reset(p.get());
-        }
-
-        _p._backingParam = p;
-        solverParamsDict[p.id] = _p;
-      }
-      return _p;
-    }
-
-    (function pickupAuxiliaryInfoFromSlaves() {
-      for (var i = 0; i < reduceInfo.linkedParams.length; ++i) {
-        var linkedParams = reduceInfo.linkedParams[i];
-        var master = linkedParams[0];
-        if (auxDict[master] !== undefined) continue;
-        for (var j = 1; j < linkedParams.length; j++) {
-          var slave = linkedParams[j];
-          if (auxDict[slave] !== undefined) {
-            auxDict[master] = true;
-            break;
-          }
-        }
-      }
-    })();
-
-    for (var i = 0; i < system.length; ++i) {
-
-      var sdata = system[i];
-      var params = [];
-
-      for (let p = 0; p < sdata[1].length; ++p) {
-        const param = sdata[1][p];
-        const solverParam = getSolverParam(param);
-        solverParam.aux = auxDict[param.id] !== undefined;
-        params.push(solverParam);
-      }
-      if (reduceInfo.reducedConstraints[i] === true) continue;
-
-      var _constr = createByConstraintName(sdata[0], params, sdata[2]);
-      constrs.push(_constr);
-    }
-
-    var lockedSolverParams = [];
-    for (let p = 0; p < locked.length; ++p) {
-      lockedSolverParams[p] = getSolverParam(locked[p]);
-    }
-
-    const solver: any = prepare(constrs, lockedSolverParams);
-    function solve(rough, alg) {
-      return solver.solveSystem(rough, alg);
-    }
-
-    const viewer = this.viewer;
-    function sync() {
-      for (var paramId in solverParamsDict) {
-        var solverParam = solverParamsDict[paramId];
-        if (!!solverParam._backingParam.aux) continue;
-        solverParam._backingParam.set(solverParam.get());
-      }
-
-      //Make sure all coincident constraints are equal
-      for (var ei = 0; ei < reduceInfo.linkedParams.length; ++ei) {
-        var master = reduceInfo.idToParam[reduceInfo.linkedParams[ei][0]];
-        for (var i = 1; i < reduceInfo.linkedParams[ei].length; ++i) {
-          var slave = reduceInfo.idToParam[reduceInfo.linkedParams[ei][i]];
-          slave.set(master.get());
-        }
-      }
-      viewer.equalizeLinkedEndpoints();
-    }
-
-    function updateParameter(p) {
-      getSolverParam(p).set(p.get());
-    }
-
-    solver.solve = solve;
-    solver.sync = sync;
-    solver.updateParameter = updateParameter;
-    return solver;
   }
 }
 

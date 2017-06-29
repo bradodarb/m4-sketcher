@@ -327,5 +327,6 @@ var solve_lm = function (sys, model, jacobian, rough) {
 
 export {
   Param,
-  prepare
+  prepare,
+  System
 }

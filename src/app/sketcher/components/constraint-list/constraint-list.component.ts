@@ -1,6 +1,6 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { ParametricManager } from '../../lib/parametrics';
-
+import { Subject } from 'rxjs/Rx';
 @Component({
   selector: 'm4-sketcher-constraint-list',
   templateUrl: './constraint-list.component.html',
@@ -10,33 +10,58 @@ export class ConstraintListComponent implements OnInit {
   @Input()
   parametricManager: ParametricManager;
 
+  @Output() peekConstraint = new EventEmitter();
+  @Output() selectConstraint = new EventEmitter();
+  @Output() deSelectConstraint = new EventEmitter();
+  @Output() removeConstraint = new EventEmitter();
+
+  public constraints = [];
+
   constructor() { }
 
   ngOnInit() {
     console.log(this.parametricManager);
-  }
+    this.parametricManager.constraintStream.subscribe(item => {
+      switch (item.action) {
+        case 'add':
+          if (this.constraints.indexOf(item.constraint) < 0) {
 
-  private getItems() {
-    var theItems = [];
+            this.constraints.push(item.constraint);
 
-    for (var j = 0; j < this.parametricManager.subSystems.length; j++) {
-      var sub = this.parametricManager.subSystems[j];
-      for (var i = 0; i < sub.constraints.length; ++i) {
-        var constr = sub.constraints[i];
-        if (constr.aux !== true/* && app.constraintFilter[constr.NAME] != true*/) {
-          theItems.push({ name: constr.UI_NAME, constr: constr });
-        }
+          }
+          break;
+
+        case 'remove':
+          const index = this.constraints.indexOf(item.constraint)
+          if (index > -1) {
+
+            this.constraints.splice(index, 1);
+
+          }
+          break;
       }
-    }
-    theItems.sort(function (a, b) {
-      if (a.constr.NAME == 'coi') {
-        return b.constr.NAME == 'coi' ? 0 : 1;
-      }
-      return a.constr.NAME.localeCompare(b.constr.NAME)
     });
-    return theItems;
   }
+
+  peek(item) {
+    this.peekConstraint.emit(item);
+    console.log('hover', item);
+  }
+  select(item) {
+    this.selectConstraint.emit(item);
+    console.log('select', item);
+  }
+  leave() {
+    this.deSelectConstraint.emit();
+    console.log('de-select');
+  }
+  remove(item) {
+    this.removeConstraint.emit(item);
+    console.log('remove', item);
+  }
+
 }
+
 /*
   var pm = app.viewer.parametricManager;
   var constrList = new ui.List('constrs', {

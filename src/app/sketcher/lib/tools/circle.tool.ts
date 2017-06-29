@@ -57,7 +57,10 @@ export class CircleTool extends Tool {
       new EndPoint(p.x, p.y)
     );
 
-    if (needSnap) this.viewer.parametricManager.linkObjects([this.circle.center, p]);
+    if (needSnap) {
+      this.viewer.parametricManager.linkObjects([this.circle.center, p]);
+    }
+
     this.pointPicked(this.circle.center.x, this.circle.center.y);
     this.sendHint('specify radius');
     this.viewer.activeLayer.add(this.circle);
@@ -74,11 +77,15 @@ export class CircleTool extends Tool {
   processCommand(command) {
     if (this.circle == null) {
       const result = Tool.parseVector(this.viewer.referencePoint, command);
-      if (typeof result === 'string') return result;
+      if (typeof result === 'string') {
+        return result;
+      }
       this.stepCreateCircle(result, false)
     } else {
       const result = Tool.parseNumber(command);
-      if (typeof result === 'string') return result;
+      if (typeof result === 'string') {
+        return result;
+      }
       this.circle.radius.set(result);
       this.stepFinish();
     }

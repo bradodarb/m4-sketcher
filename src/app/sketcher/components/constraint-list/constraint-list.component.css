@@ -1,0 +1,12 @@
+.constraint {
+    cursor: pointer;
+}
+
+.constraint:hover {
+    background: #CDCDCD;
+    text-decoration: underline;
+}
+
+.constraint:click {
+    background: #004232;
+}

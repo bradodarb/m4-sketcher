@@ -1,3 +1,6 @@
 <p>
-  constraint-list works!
+    constraint-list works!
 </p>
+<div *ngFor="let item of constraints">
+    <span class="constraint" (click)="select(item)" (mouseover)="peek(item)" (mouseleave)="leave()">{{item.UI_NAME}}</span>
+</div>
