@@ -13,7 +13,10 @@ import { Observable } from 'rxjs/Rx';
 
 import { WindowRef } from '../../services/window.service';
 import { Viewport2d } from '../../lib/viewport';
-import { PointTool, ArcTool, CircleTool, DiameterDimensionTool, RectangleTool } from '../../lib/tools';
+import {
+  PointTool, ArcTool, CircleTool, DiameterDimensionTool,
+  RectangleTool, BezierCurveTool, FilletTool
+} from '../../lib/tools';
 import { askNumber } from '../../lib/util';
 
 @Component({
@@ -57,8 +60,14 @@ export class ViewPortComponent implements OnInit {
   addCircle() {
     this.viewport.toolManager.takeControl(new CircleTool(this.viewport));
   }
+  addFillet() {
+    this.viewport.toolManager.takeControl(new FilletTool(this.viewport));
+  }
   addRectangle() {
     this.viewport.toolManager.takeControl(new RectangleTool(this.viewport));
+  }
+  addBezier() {
+    this.viewport.toolManager.takeControl(new BezierCurveTool(this.viewport));
   }
   addDiameterDimension() {
     this.viewport.toolManager.takeControl(new DiameterDimensionTool(this.viewport, this.viewport.dimLayer));

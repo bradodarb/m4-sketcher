@@ -1,5 +1,6 @@
 
 import { Arc } from './arc.render-model';
+import { BezierCurve } from './bezier-curve.render-model';
 import { Circle } from './circle.render-model';
 import { CrossHair } from './cross-hair.render-model';
 import { Datum } from './datum.render-model';
@@ -20,6 +21,7 @@ import { DiameterDimension } from './dimension-diameter.render-model';
 
 export {
   Arc,
+  BezierCurve,
   Circle,
   CrossHair,
   Datum,

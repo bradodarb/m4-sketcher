@@ -12,10 +12,10 @@ class Vector {
     this.z = z;
   }
 
-  public set(x, y, z) {
-    this.x = x || 0;
-    this.y = y || 0;
-    this.z = z || 0;
+  public set(x = 0, y = 0, z = 0) {
+    this.x = x;
+    this.y = y;
+    this.z = z;
     return this;
   }
 
@@ -87,7 +87,7 @@ class Vector {
     return new Vector(this.x + vector.x, this.y + vector.y, this.z + vector.z);
   }
 
-  private _plus(vector) {
+  public _plus(vector) {
     this.x += vector.x;
     this.y += vector.y;
     this.z += vector.z;

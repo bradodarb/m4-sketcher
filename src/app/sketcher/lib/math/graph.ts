@@ -20,7 +20,7 @@ class Graph {
   }
 
 
-  public findAllLoops = function (graph, hashCode, equals) {
+  static findAllLoops = function (graph, hashCode, equals) {
 
     var loops = [];
     var visited = new HashTable(hashCode, equals);

@@ -8,5 +8,7 @@
 <button (click)="addArc()" class="btn">Add Arc</button>
 <button (click)="addCircle()" class="btn">Add Circle</button>
 <button (click)="addRectangle()" class="btn">Add Rectangle</button>
+<button (click)="addFillet()" class="btn">Fillet</button>
 <button (click)="addDiameterDimension()" class="btn">Add Diameter Dim</button>
-<m4-sketcher-constraint-list [parametricManager]="viewport.parametricManager" (peekConstraint)="onPeek($event)" (selectConstraint)="onSelect($event)" (deSelectConstraint)="onDeSelect($event)"></m4-sketcher-constraint-list>
+<button (click)="addBezier()" class="btn">Add Bezier Curve</button>
+<m4-sketcher-constraint-list [parametricManager]="viewport.parametricManager" (peekConstraint)="onPeek($event)" (selectConstraint)="onSelect($event)" (deSelectConstraint)="onDeSelect()"></m4-sketcher-constraint-list>
