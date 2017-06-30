@@ -37,7 +37,7 @@ export class Arc extends SketchObject {
     return this.center;
   }
 
-  translateImpl(dx, dy) {
+  translateSelf(dx, dy) {
     this.a.translate(dx, dy);
     this.b.translate(dx, dy);
     this.center.translate(dx, dy);

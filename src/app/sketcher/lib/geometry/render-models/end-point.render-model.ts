@@ -32,7 +32,7 @@ export class EndPoint extends SketchObject {
     return this;
   }
 
-  public translateImpl(dx, dy) {
+  public translateSelf(dx, dy) {
     this.x += dx;
     this.y += dy;
   }

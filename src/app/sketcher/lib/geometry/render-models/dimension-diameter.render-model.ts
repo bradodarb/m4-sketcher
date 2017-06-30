@@ -25,7 +25,7 @@ export class DiameterDimension extends SketchObject {
   getReferencePoint() {
   }
 
-  translateImpl(dx, dy) {
+  translateSelf(dx, dy) {
   }
 
   drawSelf(viewer: Viewport2d) {

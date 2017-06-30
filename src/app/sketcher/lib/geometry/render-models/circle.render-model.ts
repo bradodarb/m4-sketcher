@@ -30,7 +30,7 @@ export class Circle extends SketchObject {
     return this.center;
   }
 
-  translateImpl(dx, dy) {
+  translateSelf(dx, dy) {
     this.center.translate(dx, dy);
   }
 

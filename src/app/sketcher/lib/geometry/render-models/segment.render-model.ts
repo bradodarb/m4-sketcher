@@ -60,7 +60,7 @@ export class Segment extends SketchObject {
     return this.a;
   }
 
-  translateImpl(dx, dy) {
+  translateSelf(dx, dy) {
     this.a.translate(dx, dy);
     this.b.translate(dx, dy);
   }
