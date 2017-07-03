@@ -2,26 +2,22 @@ import { Component, ViewChild, ViewContainerRef, ComponentFactoryResolver, OnIni
 import { ViewPortComponent } from '../view-port/view-port.component';
 import { ComponentInjectorService } from '../../../shared/services/component-injector.service';
 @Component({
-  selector: 'm4-sketcher-svetch-editor',
+  selector: 'm4-sketcher-sketch-editor',
   templateUrl: './sketch-editor.component.html',
-  styleUrls: ['./sketch-editor.component.css']
+  styleUrls: ['./sketch-editor.component.css'],
+  providers: [ComponentInjectorService]
 })
 export class SketchEditorComponent implements OnInit {
 
   @ViewChild('parent', { read: ViewContainerRef })
   parent: ViewContainerRef;
 
-  injector = new ComponentInjectorService(ViewPortComponent, null);
 
-  viewPort: ComponentFactory<ViewPortComponent>;
-  constructor(private componentFactoryResolver: ComponentInjectorService) {
-    this.viewPort = ComponentInjectorService.
+  constructor(private componentInjectorService: ComponentInjectorService) {
   }
 
   ngOnInit() {
-    let anotherChildComponentHolder = this.parent.createComponent(this.viewPort);
-
-    setTimeout(() => anotherChildComponentHolder.destroy(), 500)
+    this.componentInjectorService.injectInto(ViewPortComponent, this.parent);
   }
 
 }

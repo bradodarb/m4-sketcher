@@ -14,13 +14,16 @@ import { EditRectangleComponent } from './components/shape-editor-components/edi
     CommonModule
   ],
   exports: [
-    ViewPortComponent,
+    SketchEditorComponent,
   ],
   declarations: [
     ViewPortComponent,
     ConstraintListComponent,
     SketchEditorComponent,
     EditRectangleComponent
+  ],
+  entryComponents: [
+    ViewPortComponent
   ]
 })
 export class SketcherModule { }

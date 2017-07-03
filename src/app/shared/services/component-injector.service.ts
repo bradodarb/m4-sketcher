@@ -2,29 +2,29 @@
 import { Injectable, Component, ViewChild, ViewContainerRef, ComponentFactoryResolver, ComponentRef, ComponentFactory } from '@angular/core';
 
 @Injectable()
-export class ComponentInjectorService<T>{
+export class ComponentInjectorService {
 
-  private factory: ComponentFactory<T>;
-  public instances: Array<ComponentRef<T>>;
-  constructor(component: { new (): T }, componentFactoryResolver: ComponentFactoryResolver) {
-    this.factory = componentFactoryResolver.resolveComponentFactory<T>(component);
+  public instances: Array<any> = new Array<any>();
+  constructor(private componentFactoryResolver: ComponentFactoryResolver) {
+
   }
 
-  injectInto(target: ViewContainerRef) {
-    const result = target.createComponent<T>(this.factory);
+  injectInto(component, target: ViewContainerRef): any {
+    const factory = this.componentFactoryResolver.resolveComponentFactory(component);
+    const result = target.createComponent(factory);
     const index = this.instances.length;
     result.onDestroy(comp => {
       console.log('Component Destroyed', comp);
-      if (comp) {
-        const index = this.instances.indexOf(comp);
+      if (result) {
+        const index = this.instances.indexOf(result);
         this.removeFromCollection(index);
       }
     })
     this.instances.push(result);
-    return { instance: result, index: index };
+    return result;
   }
 
-  destroy(instance: ComponentRef<T>) {
+  destroy<T>(instance: ComponentRef<T>) {
     const index = this.instances.indexOf(instance);
     if (index > -1) {
       this.instances[index].destroy();

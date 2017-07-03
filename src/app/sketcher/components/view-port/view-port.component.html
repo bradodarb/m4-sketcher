@@ -13,5 +13,3 @@
 <button (click)="addBezier()" class="btn">Add Bezier Curve</button>
 <m4-sketcher-constraint-list [parametricManager]="viewport.parametricManager" (peekConstraint)="onPeek($event)" (selectConstraint)="onSelect($event)"
   (deSelectConstraint)="onDeSelect()"></m4-sketcher-constraint-list>
-
-<ng-container *ngComponentOutlet="ConstraintList"></ng-container>
