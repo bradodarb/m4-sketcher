@@ -5,7 +5,7 @@ export class ReferencePoint extends Shape {
   public x: number = 0;
   public y: number = 0;
   constructor() {
-    super('TCAD.TWO.ReferencePoint');
+    super('M4CAD.TWO.ReferencePoint');
   }
 
   draw(viewport: Viewport2d) {

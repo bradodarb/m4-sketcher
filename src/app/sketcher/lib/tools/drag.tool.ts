@@ -87,7 +87,7 @@ export class DragTool extends Tool {
   getParamsToLock() {
     var params = [];
     this.obj.accept(function (obj) {
-      if (obj.className === 'TCAD.TWO.EndPoint' && !obj.isAuxOrLinkedTo()) {
+      if (obj.className === 'M4CAD.TWO.EndPoint' && !obj.isAuxOrLinkedTo()) {
         params.push(obj._x);
         params.push(obj._y);
       }

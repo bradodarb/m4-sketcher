@@ -16,7 +16,7 @@ export class Datum /*BasisOrigin*/ extends Shape {
   public xShift = 0;
 
   constructor(basis, viewer) {
-    super('TCAD.TWO.Datum');
+    super('M4CAD.TWO.Datum');
   }
 
   draw(viewer: Viewport2d) {

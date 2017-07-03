@@ -14,7 +14,7 @@ export class DiameterDimension extends SketchObject {
   public angle: number;
 
   constructor(obj) {
-    super('TCAD.TWO.DiameterDimension');
+    super('M4CAD.TWO.DiameterDimension');
     this.obj = obj;
     this.angle = Math.PI / 4;
   }
@@ -30,9 +30,9 @@ export class DiameterDimension extends SketchObject {
 
   drawSelf(viewer: Viewport2d) {
     if (this.obj == null) return;
-    if (this.obj.className === 'TCAD.TWO.Circle') {
+    if (this.obj.className === 'M4CAD.TWO.Circle') {
       this.drawForCircle(viewer);
-    } else if (this.obj.className === 'TCAD.TWO.Arc') {
+    } else if (this.obj.className === 'M4CAD.TWO.Arc') {
       this.drawForArc(viewer);
     }
   }

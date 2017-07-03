@@ -1,9 +1,9 @@
 export function twoPoints(objs) {
   var points = [];
   for (var i = 0; i < objs.length; ++i) {
-    if (objs[i].className == 'TCAD.TWO.EndPoint') {
+    if (objs[i].className == 'M4CAD.TWO.EndPoint') {
       points.push(objs[i]);
-    } else if (objs[i].className == 'TCAD.TWO.Segment') {
+    } else if (objs[i].className == 'M4CAD.TWO.Segment') {
       points.push(objs[i].a);
       points.push(objs[i].b);
     }
@@ -18,7 +18,7 @@ export function points(objs) {
   var points = [];
   for (var i = 0; i < objs.length; ++i) {
     objs[i].accept(function (o) {
-      if (o.className === 'TCAD.TWO.EndPoint') {
+      if (o.className === 'M4CAD.TWO.EndPoint') {
         points.push(o);
       }
       return true;
@@ -33,7 +33,7 @@ export function points(objs) {
 export function arkCirc(objs, min) {
   var arcs = [];
   for (var i = 0; i < objs.length; ++i) {
-    if (objs[i].className === 'TCAD.TWO.Arc' || objs[i].className === 'TCAD.TWO.Circle') {
+    if (objs[i].className === 'M4CAD.TWO.Arc' || objs[i].className === 'M4CAD.TWO.Circle') {
       arcs.push(objs[i]);
     }
   }
@@ -62,9 +62,9 @@ export function pointAndLine(objs) {
   var line = null;
 
   for (var i = 0; i < objs.length; ++i) {
-    if (objs[i].className == 'TCAD.TWO.EndPoint') {
+    if (objs[i].className == 'M4CAD.TWO.EndPoint') {
       point = objs[i];
-    } else if (objs[i].className == 'TCAD.TWO.Segment') {
+    } else if (objs[i].className == 'M4CAD.TWO.Segment') {
       line = objs[i];
     }
   }
@@ -77,7 +77,7 @@ export function pointAndLine(objs) {
 
 export function line(objs) {
   for (var i = 0; i < objs.length; ++i) {
-    if (objs[i].className == 'TCAD.TWO.Segment') {
+    if (objs[i].className == 'M4CAD.TWO.Segment') {
       return objs[i];
     }
   }
@@ -85,7 +85,7 @@ export function line(objs) {
 }
 
 export function lines(objs) {
-  return objs.filter(o => o.className == 'TCAD.TWO.Segment')
+  return objs.filter(o => o.className == 'M4CAD.TWO.Segment')
 }
 
 export function arcCircAndLine(objs) {
@@ -94,9 +94,9 @@ export function arcCircAndLine(objs) {
   var line = null;
 
   for (var i = 0; i < objs.length; ++i) {
-    if (objs[i].className === 'TCAD.TWO.Arc' || objs[i].className === 'TCAD.TWO.Circle') {
+    if (objs[i].className === 'M4CAD.TWO.Arc' || objs[i].className === 'M4CAD.TWO.Circle') {
       arc = objs[i];
-    } else if (objs[i].className == 'TCAD.TWO.Segment') {
+    } else if (objs[i].className == 'M4CAD.TWO.Segment') {
       line = objs[i];
     }
   }
@@ -110,7 +110,7 @@ export function arcCircAndLine(objs) {
 export function twoLines(objs) {
   var lines = [];
   for (var i = 0; i < objs.length; ++i) {
-    if (objs[i].className == 'TCAD.TWO.Segment') {
+    if (objs[i].className == 'M4CAD.TWO.Segment') {
       lines.push(objs[i]);
     }
   }

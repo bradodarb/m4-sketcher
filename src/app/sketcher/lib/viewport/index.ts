@@ -10,7 +10,7 @@ import { RenderPipeline, SketchPipeline } from '../render-pipeline';
 
 import { isEndPoint, DrawPoint } from '../geometry/utils';
 
-import { ParametricManager } from '../parametrics';
+import { ParametricManager } from '../constraints/parametrics';
 
 export class Viewport2d {
 

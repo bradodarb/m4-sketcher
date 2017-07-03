@@ -8,7 +8,7 @@ import { SketchObject } from './sketch-shape.render-model';
 
 export class HorizontalDimension extends LinearDimension {
   constructor(a, b) {
-    super(a, b, 'TCAD.TWO.HDimension');
+    super(a, b, 'M4CAD.TWO.HDimension');
   }
 
   getA() {

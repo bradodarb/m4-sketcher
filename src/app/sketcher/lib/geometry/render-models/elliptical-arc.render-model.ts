@@ -16,7 +16,7 @@ export class EllipticalArc extends Ellipse {
   public b: EndPoint
   constructor(ep1: EndPoint, ep2: EndPoint, a: EndPoint, b: EndPoint) {
     super(ep1, ep2);
-    this.setClassName('TCAD.TWO.EllipticalArc');
+    this.setClassName('M4CAD.TWO.EllipticalArc');
     this.a = a;
     this.b = b;
     this.addChild(a);

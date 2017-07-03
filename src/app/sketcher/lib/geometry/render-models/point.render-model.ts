@@ -9,7 +9,7 @@ export class Point extends Shape {
   public radius: number = 1;
 
   constructor(x, y, rad) {
-    super('TCAD.TWO.Point');
+    super('M4CAD.TWO.Point');
     this.x = x;
     this.y = y;
     this.radius = rad;

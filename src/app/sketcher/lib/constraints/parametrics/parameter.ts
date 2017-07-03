@@ -1,5 +1,5 @@
-import { Generator } from '../util/id-generator';
-import { Param as CachedParam } from '../constraints/solver'
+import { Generator } from '../../util/id-generator';
+import { Param as CachedParam } from '../solver'
 export class Param {
   public id: number;
   public obj;

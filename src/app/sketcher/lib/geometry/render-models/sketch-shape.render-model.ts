@@ -66,7 +66,7 @@ export class SketchObject extends Shape {
 
   translateSelf(dx, dy) {
     this.accept(function (obj) {
-      if (obj.className === 'TCAD.TWO.EndPoint') {
+      if (obj.className === 'M4CAD.TWO.EndPoint') {
         obj.translate(dx, dy);
       }
       return true;

@@ -2,7 +2,7 @@ import Vector from '../math/vector';
 import { EndPoint, Arc } from '../geometry/render-models';
 import { Tool } from './tool';
 import { DefaultStyles } from '../config';
-import { Coincident, Tangent } from '../constraints';
+import { Coincident, Tangent, Radius } from '../constraints';
 import * as fetch from '../constraints/fetchers';
 import * as math from '../math/math';
 
@@ -71,6 +71,7 @@ export class FilletTool extends Tool {
     pm._add(new Tangent(arc, point2.parent));
     pm._add(new Coincident(arc.a, point1));
     pm._add(new Coincident(arc.b, point2));
+    pm._add(new Radius(arc, arc.radius.value))
 
 
     pm.refresh();
@@ -97,13 +98,13 @@ export class FilletTool extends Tool {
   }
 
   static isLine(line) {
-    return line != null && line.className === 'TCAD.TWO.Segment';
+    return line != null && line.className === 'M4CAD.TWO.Segment';
   }
 
   getCandidate(e) {
     var picked = this.viewer.pick(e);
     if (picked.length > 0) {
-      var res = fetch.sketchObjects(picked, true, ['TCAD.TWO.EndPoint']);
+      var res = fetch.sketchObjects(picked, true, ['M4CAD.TWO.EndPoint']);
       if (res == null) return null;
       var point1 = res[0];
       if (!FilletTool.isLine(point1.parent)) return;

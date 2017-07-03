@@ -8,7 +8,7 @@ import { LinearDimension } from './dimension-linear.render-model';
 export class VerticalDimension extends LinearDimension {
 
   constructor(a, b) {
-    super(a, b, 'TCAD.TWO.VDimension');
+    super(a, b, 'M4CAD.TWO.VDimension');
   }
 
   getA() {

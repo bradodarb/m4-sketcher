@@ -62,7 +62,7 @@ export class LoopPickTool extends Tool {
     this.loops.clear();
     const points = [];
     this.viewer.accept((obj) => {
-      if (obj.className == 'TCAD.TWO.EndPoint' && obj.parent &&
+      if (obj.className == 'M4CAD.TWO.EndPoint' && obj.parent &&
         obj.parent.a && obj.parent.b && (obj.parent.a == obj || obj.parent.b == obj)) {
         points.push(obj);
       }

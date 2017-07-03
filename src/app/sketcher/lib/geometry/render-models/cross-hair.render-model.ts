@@ -13,7 +13,7 @@ export class CrossHair extends SketchObject {
   public radius: number;
 
   constructor(x, y, radius) {
-    super('TCAD.TWO.CrossHair');
+    super('M4CAD.TWO.CrossHair');
     this.center = new EndPoint(x, y);
     this.radius = radius;
     this.style = null;

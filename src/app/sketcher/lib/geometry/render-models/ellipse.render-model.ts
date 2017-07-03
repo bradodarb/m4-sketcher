@@ -14,7 +14,7 @@ export class Ellipse extends SketchObject {
   public radius = new Ref(0);
 
   constructor(ep1: EndPoint, ep2: EndPoint) {
-    super('TCAD.TWO.Ellipse');
+    super('M4CAD.TWO.Ellipse');
     this.ep1 = ep1;
     this.ep2 = ep2;
 

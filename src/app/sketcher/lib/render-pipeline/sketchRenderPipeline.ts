@@ -1,7 +1,7 @@
 import RenderPipeline from './RenderPipeline';
 
 function isEndPoint(o) {
-  return o.className === 'TCAD.TWO.EndPoint'
+  return o.className === 'M4CAD.TWO.EndPoint'
 }
 
 const predicates = [

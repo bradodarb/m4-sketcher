@@ -9,7 +9,7 @@ export class Segment extends SketchObject {
   public a: EndPoint;
   public b: EndPoint;
   constructor(a, b) {
-    super('TCAD.TWO.Segment');
+    super('M4CAD.TWO.Segment');
     this.a = a;
     this.b = b;
     a.parent = this;

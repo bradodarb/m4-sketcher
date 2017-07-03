@@ -28,16 +28,17 @@ import {
   Symmetry,
   Angle,
   LockConvex, SubSystem,
-} from '../constraints';
-import { System } from '../constraints/solver';
-import { createByConstraintName } from '../constraints/utils';
+} from '../';
+import { ConstraintAction } from './constraint-action';
+import { System } from '../solver';
+import { createByConstraintName } from '../utils';
 
-import * as fetch from '../constraints/fetchers';
-import { Param, prepare } from '../constraints/solver';
+import * as fetch from '../fetchers';
+import { Param, prepare } from '../solver';
 import { Param as Parameter } from './parameter';
-import { Viewport2d } from '../viewport';
-import Vector from '../math/vector'
-import * as utils from '../util';
+import { Viewport2d } from '../../viewport';
+import Vector from '../../math/vector'
+import * as utils from '../../util';
 
 
 class Link {
@@ -65,14 +66,16 @@ class ParametricManager {
   public subSystems: Array<SubSystem> = new Array<SubSystem>();
   public constantTable = {};
   public constantResolver: any
-  public constraintStream = new Subject<any>();
+  public constraintStream = new Subject<ConstraintAction>();
+
   constructor(viewer) {
-    this.constraintStream = new Subject<any>();
+    this.constraintStream = new Subject<ConstraintAction>();
     this.viewer = viewer;
     this.subSystems = [];
     this.constantTable = {};
     this.constantResolver = this.createConstantResolver();
   }
+
   createConstantResolver = function () {
     var pm = this;
     return function (value) {
@@ -85,11 +88,10 @@ class ParametricManager {
       return value;
     }
   }
-  notify = function (actionType, constraint) {
-    this.constraintStream.next({
-      action: actionType,
-      constraint: constraint
-    })
+  notify = function (actionType: string, constraint: Constraint) {
+    this.constraintStream.next(
+      new ConstraintAction(actionType, constraint)
+    );
   }
 
   rebuildConstantTable = function (constantDefinition) {
@@ -334,12 +336,12 @@ class ParametricManager {
 
 
   tangent = function (objs) {
-    const ellipses = fetch.generic(objs, ['TCAD.TWO.Ellipse', 'TCAD.TWO.EllipticalArc'], 0);
-    const lines = fetch.generic(objs, ['TCAD.TWO.Segment'], 1);
+    const ellipses = fetch.generic(objs, ['M4CAD.TWO.Ellipse', 'M4CAD.TWO.EllipticalArc'], 0);
+    const lines = fetch.generic(objs, ['M4CAD.TWO.Segment'], 1);
     if (ellipses.length > 0) {
       this.add(new EllipseTangent(lines[0], ellipses[0]));
     } else {
-      const arcs = fetch.generic(objs, ['TCAD.TWO.Arc', 'TCAD.TWO.Circle'], 1);
+      const arcs = fetch.generic(objs, ['M4CAD.TWO.Arc', 'M4CAD.TWO.Circle'], 1);
       this.add(new Tangent(arcs[0], lines[0]));
     }
   }
@@ -364,8 +366,8 @@ class ParametricManager {
   }
 
   entityEquality = function (objs) {
-    var arcs = fetch.generic(objs, ['TCAD.TWO.Arc', 'TCAD.TWO.Circle'], 0);
-    var lines = fetch.generic(objs, ['TCAD.TWO.Segment'], 0);
+    var arcs = fetch.generic(objs, ['M4CAD.TWO.Arc', 'M4CAD.TWO.Circle'], 0);
+    var lines = fetch.generic(objs, ['M4CAD.TWO.Segment'], 0);
     if (arcs.length > 0) this.rr(arcs);
     if (lines.length > 0) this.ll(lines);
   }
@@ -398,10 +400,10 @@ class ParametricManager {
   }
 
   pointOnArc = function (objs) {
-    const points = fetch.generic(objs, ['TCAD.TWO.EndPoint'], 1);
-    const arcs = fetch.generic(objs, ['TCAD.TWO.Arc', 'TCAD.TWO.Circle', 'TCAD.TWO.Ellipse', 'TCAD.TWO.EllipticalArc'], 1);
+    const points = fetch.generic(objs, ['M4CAD.TWO.EndPoint'], 1);
+    const arcs = fetch.generic(objs, ['M4CAD.TWO.Arc', 'M4CAD.TWO.Circle', 'M4CAD.TWO.Ellipse', 'M4CAD.TWO.EllipticalArc'], 1);
     const arc = arcs[0];
-    if (arc._class == 'TCAD.TWO.Ellipse' || arc._class == 'TCAD.TWO.EllipticalArc') {
+    if (arc._class == 'M4CAD.TWO.Ellipse' || arc._class == 'M4CAD.TWO.EllipticalArc') {
       this.add(new PointOnEllipse(points[0], arc));
     } else {
       this.add(new PointOnArc(points[0], arc));
@@ -416,7 +418,7 @@ class ParametricManager {
   }
 
   llAngle = function (objs, promptCallback) {
-    var lines = fetch.generic(objs, 'TCAD.TWO.Segment', 2);
+    var lines = fetch.generic(objs, 'M4CAD.TWO.Segment', 2);
     var l1 = lines[0];
     var l2 = lines[1];
 

@@ -12,7 +12,7 @@ export class Circle extends SketchObject {
   public radius = new Ref(0);
 
   constructor(center) {
-    super('TCAD.TWO.Circle');
+    super('M4CAD.TWO.Circle');
 
     this.center = center;
     this.center.parent = this;

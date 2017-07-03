@@ -11,7 +11,7 @@ export class LinearDimension extends SketchObject {
   protected b;
   public flip: boolean;
 
-  constructor(a, b, className = 'TCAD.TWO.Dimension') {
+  constructor(a, b, className = 'M4CAD.TWO.Dimension') {
     super(className);
     this.a = a;
     this.b = b;

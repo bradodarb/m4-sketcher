@@ -1,4 +1,4 @@
-import { Param } from '../../Parametrics/parameter';
+import { Param } from '../../constraints/parametrics/parameter';
 
 export class Constraint {
   protected _name: string;

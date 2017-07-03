@@ -18,17 +18,17 @@ export class DiameterDimensionTool extends Tool {
     mousemove(e) {
         var p = this.viewer.screenToModel(e);
         var objects = this.viewer.search(p.x, p.y, 20 / this.viewer.scale, true, false, [])
-            .filter(function(o) {
-                return o.className === 'TCAD.TWO.Circle' || o.className === 'TCAD.TWO.Arc' || o.className === 'TCAD.TWO.DiameterDimension';
+            .filter(function (o) {
+                return o.className === 'M4CAD.TWO.Circle' || o.className === 'M4CAD.TWO.Arc' || o.className === 'M4CAD.TWO.DiameterDimension';
             });
 
         if (objects.length != 0) {
-          const target = objects[0];
-          if(target.className === 'TCAD.TWO.DiameterDimension'){
-            this.dim = target;
-          }else{
-            this.dim.obj = target;
-          }
+            const target = objects[0];
+            if (target.className === 'M4CAD.TWO.DiameterDimension') {
+                this.dim = target;
+            } else {
+                this.dim.obj = target;
+            }
         } else {
             this.dim.obj = null;
         }

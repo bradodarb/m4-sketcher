@@ -20,7 +20,7 @@ export class BezierCurve extends SketchObject {
   protected lut;
 
   constructor(a, b, cp1, cp2) {
-    super('TCAD.TWO.BezierCurve');
+    super('M4CAD.TWO.BezierCurve');
     this.a = a;
     this.b = b;
     this.cp1 = cp1;

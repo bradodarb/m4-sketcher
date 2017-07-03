@@ -14,7 +14,7 @@ export class Arc extends SketchObject {
   public radius: Ref;
 
   constructor(a, b, center) {
-    super('TCAD.TWO.Arc');
+    super('M4CAD.TWO.Arc');
     this.a = a;
     this.b = b;
     this.center = center;

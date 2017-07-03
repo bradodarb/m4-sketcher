@@ -1,5 +1,5 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
-import { ParametricManager } from '../../lib/parametrics';
+import { ParametricManager } from '../../lib/constraints/parametrics';
 import { Subject } from 'rxjs/Rx';
 @Component({
   selector: 'm4-sketcher-constraint-list',
