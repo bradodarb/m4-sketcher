@@ -6,12 +6,14 @@ import { ConstraintListComponent } from './components/constraint-list/constraint
 import { SketchEditorComponent } from './components/sketch-editor/sketch-editor.component';
 import { EditRectangleComponent } from './components/shape-editor-components/edit-rectangle/edit-rectangle.component';
 
+import { ComponentContainerModule } from 'component-containers';
 @NgModule({
   providers: [
     WindowRef
   ],
   imports: [
-    CommonModule
+    CommonModule,
+    ComponentContainerModule
   ],
   exports: [
     SketchEditorComponent,
@@ -23,7 +25,8 @@ import { EditRectangleComponent } from './components/shape-editor-components/edi
     EditRectangleComponent
   ],
   entryComponents: [
-    ViewPortComponent
+    ViewPortComponent,
+    EditRectangleComponent
   ]
 })
 export class SketcherModule { }
