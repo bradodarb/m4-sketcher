@@ -22,7 +22,7 @@
     "@angular/router": "^3.4.0",
     "angular-sortablejs": "^2.0.6",
     "bootstrap": "^3.3.7",
-    "component-containers": "^0.1.10",
+    "component-containers": "^0.1.19",
     "core-js": "^2.4.1",
     "font-awesome": "^4.7.0",
     "numeric": "^1.2.6",

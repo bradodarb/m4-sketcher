@@ -1,7 +1,7 @@
 import { Component, ViewChild, ViewContainerRef, ComponentFactoryResolver, OnInit, ComponentFactory } from '@angular/core';
 import { ViewPortComponent } from '../view-port/view-port.component';
 import { EditRectangleComponent } from '../shape-editor-components/edit-rectangle/edit-rectangle.component';
-import { ComponentMap, ContainerItemDirective } from 'component-containers';
+import { ComponentMap } from 'component-containers';
 
 @Component({
   selector: 'm4-sketcher-sketch-editor',
@@ -14,6 +14,7 @@ export class SketchEditorComponent implements OnInit {
   parent: ViewContainerRef;
 
   public current: any;
+  public items = new Array<any>();
   public map: ComponentMap;
 
   constructor() {
@@ -36,7 +37,10 @@ export class SketchEditorComponent implements OnInit {
       _self.current = new Rectangle();
       console.log(_self.current);
     }, 2000);
+    this.items.push(new Viewer());
+    this.items.push(new Rectangle());
   }
+
 
 }
 class Base {
